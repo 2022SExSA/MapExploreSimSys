@@ -1,0 +1,12 @@
+[submodule "Backend/External/PGUtils"]
+	path = Backend/External/PGUtils
+	url = https://github.com/PGZXB/PGUtils.git
+[submodule "Backend/External/SimpleAmqpClient"]
+	path = Backend/External/SimpleAmqpClient
+	url = https://github.com/alanxz/SimpleAmqpClient.git
+[submodule "Backend/External/nlohmann"]
+	path = Backend/External/nlohmann
+	url = https://github.com/nlohmann/json.git
+[submodule "Backend/External/Rabbitmqc"]
+	path = Backend/External/Rabbitmqc
+	url = https://github.com/alanxz/rabbitmq-c.git
