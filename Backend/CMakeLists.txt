@@ -15,6 +15,7 @@ include_directories(External/SimpleAmqpClient/src)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 add_definitions(-DPGZXB_DEBUG)
+add_definitions(-DMESS_WITH_LOG)
 add_definitions(-D__STDC_FORMAT_MACROS)
 add_definitions(-Wall)
 add_definitions(-Wno-unused-parameter)
@@ -24,3 +25,4 @@ add_subdirectory(Components)
 
 file(GLOB MESSBASE_SRC_FILES Base/*.cpp)
 add_library(MESSBase STATIC ${MESSBASE_SRC_FILES})
+target_link_libraries(MESSBase hiredis)
