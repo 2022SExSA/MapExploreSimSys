@@ -1,9 +1,12 @@
 #ifndef MESSBASE_BOARD_H
 #define MESSBASE_BOARD_H
 
+#include <optional>
+#include <string>
+#include <string_view>
+
 #include <hiredis/hiredis.h>
 #include <hiredis/read.h>
-#include <optional>
 
 #include "fwd.h"
 #include "utils.h"
@@ -24,7 +27,7 @@ public:
 
     std::optional<Point<int>> get_next_routing_position(const std::string &car_name) {
         // rpop {auth-token}RoutList@{car-name}
-        auto routlist_name = make_key(pgfmt::format(ROUTLIST_NAME_FROMAT, car_name));
+        auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "rpop %s", routlist_name.c_str());
         MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "rpop {0} failed: errmsg={1}", routlist_name, reply->str);
         if (reply->type == REDIS_REPLY_STRING) {
@@ -42,8 +45,8 @@ public:
 
     long long add_position_to_routlist(const std::string &car_name, const std::vector<Point<int>> &pos_list) {
         if (pos_list.empty()) return -1;
-        // lpush {auth-token}RoutList@{car-name} "{json1}" "{json2}" ...
-        auto routlist_name = make_key(pgfmt::format(ROUTLIST_NAME_FROMAT, car_name));
+        // lpush {auth-token}_RoutList@{car-name} "{json1}" "{json2}" ...
+        auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
         std::string pos_list_str;
         for (const auto &p : pos_list) {
             Json json = Json::object();
@@ -62,19 +65,81 @@ public:
         return -1;
     }
 
+    std::optional<Point<int>> get_current_position_of_car(const std::string &car_name) {
+        // hmget {auth-token}_Position@{car-name} x y
+        auto position_name = make_key(CAR_POSITION_NAME_FORMAT, car_name);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s x y", position_name.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} x y failed: errmsg={1}", position_name, reply->str);
+        if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 2) {
+            if (reply->element[0]->type == REDIS_REPLY_INTEGER && reply->element[1]->type == REDIS_REPLY_INTEGER) {
+                return Point<int>{(int)reply->element[0]->integer, (int)reply->element[1]->integer};
+            } else {
+                MESS_LOG("x, y is not int", 1);
+            }
+        }
+        return std::nullopt;
+    }
+
+    bool set_position_of_car(const std::string &car_name, const Point<int> &pos) {
+        // hmset {auth-token}_Position@{car-name} x {pos.x} y {pos.y}
+        auto position_name = make_key(CAR_POSITION_NAME_FORMAT, car_name);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s x %d y %d", position_name.c_str(), pos.x, pos.y);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmset %s x %d y %d failed: errmsg={1}", position_name.c_str(), pos.x, pos.y, reply->str);
+        return reply && reply->type != REDIS_REPLY_ERROR;
+    }
+
+    int get_grid_of_map(int r, int c) {
+        auto [w, h] = get_map_size();
+        if (r < 0 || r > h || c < 0 || c > w) return -1;
+
+        // getbit {MAP_NAME} {r * w + c}
+        auto map_name = make_key(MAP_NAME);
+        auto *reply = (redisReply*)redisCommand(redis_ctx_, "getbit %s %d", map_name.c_str(), r * w + c);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "getbit {0} {1} failed: errmsg={2}", map_name, r * w + c, reply->str);
+        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
+        return reply->integer;
+    }
+
+    int set_grid_of_map(int r, int c, int val) {
+        auto [w, h] = get_map_size();
+        if (r < 0 || r > h || c < 0 || c > w) return -1;
+
+        // setbit {MAP_NAME} {r * w + c} {val}
+        auto map_name = make_key(MAP_NAME);
+        auto *reply = (redisReply*)redisCommand(redis_ctx_, "setbit %s %d %d", map_name.c_str(), r * w + c, val);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "setbit {0} {1} {2} failed: errmsg={3}", map_name, r * w + c, val, reply->str);
+        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
+        return reply->integer;
+    }
+
     const std::string &get_auth_token() const {
         return auth_token_;
     }
 
-    static Board &get_instance() {
+    static Board* get_instance() {
         static Board ins;
-        return ins;
+        return &ins;
     }
 private:
     Board() = default;
 
-    std::string make_key(std::string &&primal_key) {
+    template <typename ...Args>
+    std::string make_key(std::string_view fmt, Args &&... args) {
+        return make_key_impl(pgfmt::format(fmt.data(), std::forward<Args>(args)...));
+    }
+
+    std::string make_key_impl(std::string &&primal_key) {
         return auth_token_ + "_" + std::move(primal_key);
+    }
+
+    std::tuple<int, int> get_map_size() {
+        auto map_size_name = make_key(MAP_SIZE_NAME);
+        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s w h", map_size_name.c_str());
+        MESS_ERR_IF(!map_size_reply || map_size_reply->type == REDIS_REPLY_ERROR, "hmget {0} w h failed: errmsg={1}", map_size_name, map_size_reply->str);
+        PGZXB_DEBUG_ASSERT(map_size_reply->type == REDIS_REPLY_ARRAY);
+        PGZXB_DEBUG_ASSERT(map_size_reply->element[0]->type == REDIS_REPLY_STRING);
+        PGZXB_DEBUG_ASSERT(map_size_reply->element[1]->type == REDIS_REPLY_STRING);
+        return {std::atoi(map_size_reply->element[0]->str), std::atoi(map_size_reply->element[1]->str)};
     }
 
     redisContext *redis_ctx_{nullptr};
