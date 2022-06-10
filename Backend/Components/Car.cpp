@@ -8,7 +8,7 @@ using namespace pg::messbase;
 class CarComponent {
 public:
     CarComponent(const CarComponentConfig &config) : config_(config) {
-        Board::get_instance()->set_position_of_car(config.name, {config.init_pos_c, config.init_pos_r});
+        Board::get_instance()->set_position_of_car(config.mq_name, {config.init_pos_c, config.init_pos_r});
     }
 
     void run() {
@@ -29,17 +29,17 @@ private:
 
         if (op.value().op == "go-next") {
             auto *board = Board::get_instance();
-            auto pos = board->get_next_routing_position(car->config_.name);
+            auto pos = board->get_next_routing_position(car->config_.mq_name);
             if (!pos.has_value()) {
-                MESS_LOG("Empty {0}", pgfmt::format(ROUTLIST_NAME_FROMAT, car->config_.name));
+                MESS_LOG("Empty {0}", pgfmt::format(ROUTLIST_NAME_FROMAT, car->config_.mq_name));
             } else {
                 int x = pos.value().x;
                 int y = pos.value().y;
-                MESS_LOG("Update Car@{0} to ({1}, {2})", car->config_.name, x, y);
+                MESS_LOG("Update Car@{0} to ({1}, {2})", car->config_.mq_name, x, y);
 
                 // Update pos of this car
-                auto ok = board->set_position_of_car(car->config_.name, {x, y});
-                MESS_ERR_IF(!ok, "Car {0} move to failed", car->config_.name);
+                auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
+                MESS_ERR_IF(!ok, "Car {0} move to failed", car->config_.mq_name);
                 
                 // Light grid on map
                 int start_x = std::max(x - car->config_.light_r, 0);
@@ -64,11 +64,11 @@ int main(int argc, char **argv) {
 
     CarComponentConfig config;
     
-    config.host = "192.168.111.1";
-    config.port = 5672;
-    config.username = "pgzxb";
-    config.password = "pgzxb";
-    config.name = Board::get_instance()->get_auth_token() + "_Car001";
+    config.mq_host = "192.168.111.1";
+    config.mq_port = 5672;
+    config.mq_username = "pgzxb";
+    config.mq_password = "pgzxb";
+    config.mq_name = Board::get_instance()->get_auth_token() + "_Car001";
 
     config.light_r = 1;
 

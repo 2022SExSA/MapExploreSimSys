@@ -82,11 +82,11 @@ int main(int argc, char **argv) {
 
     NaviComponentConfig config;
     
-    config.host = "192.168.111.1";
-    config.port = 5672;
-    config.username = "pgzxb";
-    config.password = "pgzxb";
-    config.name = Board::get_instance()->get_auth_token() + "_Navigator001";
+    config.mq_host = "192.168.111.1";
+    config.mq_port = 5672;
+    config.mq_username = "pgzxb";
+    config.mq_password = "pgzxb";
+    config.mq_name = Board::get_instance()->get_auth_token() + "_Navigator001";
 
     config.plugin_path = argv[1];
 

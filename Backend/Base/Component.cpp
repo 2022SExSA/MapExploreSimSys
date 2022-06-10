@@ -83,11 +83,11 @@ void run_component(const ComponentConfig &config, const MsgProcessingCallback & 
     };
 
     ComponentWithCallback(
-        config.host,
-        config.port,
-        config.username,
-        config.password,
-        config.name,
+        config.mq_host,
+        config.mq_port,
+        config.mq_username,
+        config.mq_password,
+        config.mq_name,
         msg_proc_func)
     .run();
 }

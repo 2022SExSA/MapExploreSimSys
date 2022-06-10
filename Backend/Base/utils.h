@@ -1,9 +1,13 @@
 #ifndef MESSBASE_UTILS_H
 #define MESSBASE_UTILS_H
 
+#include "pg/pgutil.h"
 #include "fwd.h"
+#include "config.h"
+#include "SimpleAmqpClient/Channel.h"
 #include <dlfcn.h>
 #include <sstream>
+#include <unistd.h>
 MESSBASE_NAMESPACE_START
 
 template <typename T>
@@ -133,6 +137,17 @@ struct Op {
     std::string op;
     std::vector<std::string> args;
 
+    std::string to_string() const {
+        std::string result = auth_token;
+        result += " ";
+        result += op;
+        for (const auto &arg : args) {
+            result += " ";
+            result += arg;
+        }
+        return result;
+    }
+
     static std::optional<Op> from_string(const std::string &str) { // tk op arg0 arg1 ...
         std::istringstream iss(str);
         Op op;
@@ -170,6 +185,37 @@ private:
 };
 
 using NaviPlugin = Dll;
+
+class C2Call {
+public:
+    C2Call(const MQConfig &config) :config_(config) {
+        auto input_q = config_.mq_name + ".input";
+        AmqpClient::Channel::OpenOpts opts;
+        opts.host = config_.mq_host;
+        opts.port = config_.mq_port;
+        opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth{config_.mq_username, config_.mq_password};
+        channel_ = AmqpClient::Channel::Open(opts);
+
+        channel_->DeclareExchange(input_q);
+        channel_->DeclareQueue(input_q);
+        channel_->BindQueue(input_q, input_q);
+    }
+
+    void input(const std::string &input) {
+        auto input_q = config_.mq_name + ".input";
+        channel_->BasicPublish(input_q, "", AmqpClient::BasicMessage::Create(input));
+    }
+private:
+    MQConfig config_;
+    AmqpClient::Channel::ptr_t channel_;
+};
+
+inline void launch_component(const std::string& file, const std::string &config_json) {
+    if (::fork() == 0) {
+        ::execlp(file.c_str(), file.c_str(), config_json.c_str(), NULL);
+        MESS_ERR("Launch component {0} failed, config=[\n{1}\n]", file, config_json);
+    }
+}
 
 MESSBASE_NAMESPACE_END
 #endif

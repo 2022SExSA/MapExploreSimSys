@@ -25,6 +25,18 @@ public:
         this->auth_token_ = auth_token;
     }
 
+    int get_routlist_size(const std::string &car_name) {
+        // llen {auth-token}RoutList@{car-name}
+        auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "llen %s", routlist_name.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "llen {0} failed: errmsg={1}", routlist_name, reply->str);
+        if (reply->type == REDIS_REPLY_INTEGER) {
+            return reply->integer;
+        }
+        MESS_ERR("Get size of {0} failed", routlist_name);
+        return -1;
+    }
+
     std::optional<Point<int>> get_next_routing_position(const std::string &car_name) {
         // rpop {auth-token}RoutList@{car-name}
         auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
@@ -119,6 +131,12 @@ public:
     static Board* get_instance() {
         static Board ins;
         return &ins;
+    }
+
+    void set_map_size(int w, int h) {
+        auto map_size_name = make_key(MAP_SIZE_NAME);
+        auto *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s w %d h %d", map_size_name.c_str(), w, h);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} w {1} h {2} failed: errmsg={3}", map_size_name, w, h, reply->str);
     }
 
     std::tuple<int, int> get_map_size() {
