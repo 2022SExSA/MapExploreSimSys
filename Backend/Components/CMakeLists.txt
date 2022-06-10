@@ -1,3 +1,5 @@
+add_subdirectory(NaviPlugin)
+
 include_directories(../src)
 
 file(GLOB MESSS_COMPONENTS *.cpp)
@@ -6,5 +8,5 @@ foreach(file ${MESSS_COMPONENTS})
     string(REGEX REPLACE ".+/(.+)\\..*" "\\1" file_name ${file})
     project(${file_name})
     add_executable(${file_name} ${file})
-    target_link_libraries(${file_name} MESSBase SimpleAmqpClient)
+    target_link_libraries(${file_name} MESSBase SimpleAmqpClient dl)
 endforeach(file)

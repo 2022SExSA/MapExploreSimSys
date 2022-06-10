@@ -71,10 +71,10 @@ public:
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s x y", position_name.c_str());
         MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} x y failed: errmsg={1}", position_name, reply->str);
         if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 2) {
-            if (reply->element[0]->type == REDIS_REPLY_INTEGER && reply->element[1]->type == REDIS_REPLY_INTEGER) {
-                return Point<int>{(int)reply->element[0]->integer, (int)reply->element[1]->integer};
+            if (reply->element[0]->type == REDIS_REPLY_STRING && reply->element[1]->type == REDIS_REPLY_STRING) {
+                return Point<int>{std::atoi(reply->element[0]->str), std::atoi(reply->element[1]->str)};
             } else {
-                MESS_LOG("x, y is not int", 1);
+                MESS_LOG("x, y is not string", 1);
             }
         }
         return std::nullopt;
@@ -91,25 +91,25 @@ public:
     int get_grid_of_map(int r, int c) {
         auto [w, h] = get_map_size();
         if (r < 0 || r > h || c < 0 || c > w) return -1;
-
-        // getbit {MAP_NAME} {r * w + c}
-        auto map_name = make_key(MAP_NAME);
-        auto *reply = (redisReply*)redisCommand(redis_ctx_, "getbit %s %d", map_name.c_str(), r * w + c);
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "getbit {0} {1} failed: errmsg={2}", map_name, r * w + c, reply->str);
-        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
-        return reply->integer;
+        return get_bit(make_key(MAP_NAME), r * w + c);
     }
 
     int set_grid_of_map(int r, int c, int val) {
         auto [w, h] = get_map_size();
         if (r < 0 || r > h || c < 0 || c > w) return -1;
+        return set_bit(make_key(MAP_NAME), r * w + c, val);
+    }
 
-        // setbit {MAP_NAME} {r * w + c} {val}
-        auto map_name = make_key(MAP_NAME);
-        auto *reply = (redisReply*)redisCommand(redis_ctx_, "setbit %s %d %d", map_name.c_str(), r * w + c, val);
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "setbit {0} {1} {2} failed: errmsg={3}", map_name, r * w + c, val, reply->str);
-        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
-        return reply->integer;
+    int get_grid_of_map_block(int r, int c) {
+        auto [w, h] = get_map_size();
+        if (r < 0 || r > h || c < 0 || c > w) return -1;
+        return get_bit(make_key(MAP_BLOCK_NAME), r * w + c);
+    }
+
+    int set_grid_of_map_block(int r, int c, int val) {
+        auto [w, h] = get_map_size();
+        if (r < 0 || r > h || c < 0 || c > w) return -1;
+        return set_bit(make_key(MAP_BLOCK_NAME), r * w + c, val);
     }
 
     const std::string &get_auth_token() const {
@@ -119,6 +119,16 @@ public:
     static Board* get_instance() {
         static Board ins;
         return &ins;
+    }
+
+    std::tuple<int, int> get_map_size() {
+        auto map_size_name = make_key(MAP_SIZE_NAME);
+        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s w h", map_size_name.c_str());
+        MESS_ERR_IF(!map_size_reply || map_size_reply->type == REDIS_REPLY_ERROR, "hmget {0} w h failed: errmsg={1}", map_size_name, map_size_reply->str);
+        PGZXB_DEBUG_ASSERT(map_size_reply->type == REDIS_REPLY_ARRAY);
+        PGZXB_DEBUG_ASSERT(map_size_reply->element[0]->type == REDIS_REPLY_STRING);
+        PGZXB_DEBUG_ASSERT(map_size_reply->element[1]->type == REDIS_REPLY_STRING);
+        return {std::atoi(map_size_reply->element[0]->str), std::atoi(map_size_reply->element[1]->str)};
     }
 private:
     Board() = default;
@@ -132,14 +142,24 @@ private:
         return auth_token_ + "_" + std::move(primal_key);
     }
 
-    std::tuple<int, int> get_map_size() {
-        auto map_size_name = make_key(MAP_SIZE_NAME);
-        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s w h", map_size_name.c_str());
-        MESS_ERR_IF(!map_size_reply || map_size_reply->type == REDIS_REPLY_ERROR, "hmget {0} w h failed: errmsg={1}", map_size_name, map_size_reply->str);
-        PGZXB_DEBUG_ASSERT(map_size_reply->type == REDIS_REPLY_ARRAY);
-        PGZXB_DEBUG_ASSERT(map_size_reply->element[0]->type == REDIS_REPLY_STRING);
-        PGZXB_DEBUG_ASSERT(map_size_reply->element[1]->type == REDIS_REPLY_STRING);
-        return {std::atoi(map_size_reply->element[0]->str), std::atoi(map_size_reply->element[1]->str)};
+    int set_bit(const std::string &key, int offset, int val) {
+        // ASSERT(offset is valid);
+
+        // setbit {key} {offset} {val}
+        auto *reply = (redisReply*)redisCommand(redis_ctx_, "setbit %s %d %d", key.c_str(), offset, val);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "setbit {0} {1} {2} failed: errmsg={3}", key, offset, val, reply->str);
+        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
+        return reply->integer;
+    }
+
+    int get_bit(const std::string &key, int offset) {
+        // ASSERT(offset is valid);
+
+        // getbit {key} {offset}
+        auto *reply = (redisReply*)redisCommand(redis_ctx_, "getbit %s %d", key.c_str(), offset);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "getbit {0} {1} failed: errmsg={2}", key, offset, reply->str);
+        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
+        return reply->integer;
     }
 
     redisContext *redis_ctx_{nullptr};

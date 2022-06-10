@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     config.port = 5672;
     config.username = "pgzxb";
     config.password = "pgzxb";
-    config.name = "Car001";
+    config.name = Board::get_instance()->get_auth_token() + "_Car001";
 
     config.light_r = 1;
 

@@ -2,6 +2,7 @@
 #define MESSBASE_UTILS_H
 
 #include "fwd.h"
+#include <dlfcn.h>
 #include <sstream>
 MESSBASE_NAMESPACE_START
 
@@ -146,6 +147,29 @@ struct Op {
         return op;
     }
 };
+
+class Dll {
+public:
+    Dll(const std::string &path, bool *ok = nullptr) {
+        if (ok) *ok = true;
+        dll_handle_ = ::dlopen(path.c_str(), RTLD_LAZY);
+        if (!dll_handle_ && ok) *ok = false;
+        MESS_LOG_IF(!dll_handle_, "Dll {0} open failed", path);
+    }
+
+    ~Dll() {
+        ::dlclose(dll_handle_);
+    }
+
+    template <typename Func>
+    Func find_function(const std::string &symbol) {
+        return (Func)::dlsym(dll_handle_, symbol.c_str());
+    }
+private:
+    void *dll_handle_;
+};
+
+using NaviPlugin = Dll;
 
 MESSBASE_NAMESPACE_END
 #endif
