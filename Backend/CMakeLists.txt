@@ -12,6 +12,7 @@ add_subdirectory(External/SimpleAmqpClient)
 include_directories(External/PGUtils)
 include_directories(External/nlohmann/include)
 include_directories(External/SimpleAmqpClient/src)
+include_directories(External/xpack)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 add_definitions(-DPGZXB_DEBUG)

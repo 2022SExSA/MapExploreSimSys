@@ -1,7 +1,7 @@
 #include "Board.h"
-#include "pg/pgfwd.h"
-#include "run_component.h"
 #include "utils.h"
+#include "config.h"
+#include "run_component.h"
 #include "navigator_plugin_utils.h"
 
 using namespace pg::messbase;
@@ -9,17 +9,10 @@ using namespace pg::messbase;
 // 2 algorithms(Combined as a dll):
 //      1. Dest-Position-Selecting | int pg_mess_navi_select_dest_pos_v1(MESSNP_Position *dest_pos, const MESSNP_Position *src_pos, MESSNP_MapInfoGetter *map_info_getter);
 //      2. Routing                 | int pg_mess_navi_routing_v1(MESSNP_PositionArray *rout_pos_array, const MESSNP_Position *src_pos, const MESSNP_Position *dest_pos);
-struct NaviPluginConfig {
-    std::string path;
-};
-
-struct NaviComponentConfig : public ComponentConfig {
-    NaviPluginConfig plugin;
-};
 
 class NaviComponent {
 public:
-    NaviComponent(const NaviComponentConfig &config) : config_(config), plugin_(config.plugin.path) {
+    NaviComponent(const NaviComponentConfig &config) : config_(config), plugin_(config.plugin_path) {
     }
 
     void run() {
@@ -95,7 +88,7 @@ int main(int argc, char **argv) {
     config.password = "pgzxb";
     config.name = Board::get_instance()->get_auth_token() + "_Navigator001";
 
-    config.plugin.path = argv[1];
+    config.plugin_path = argv[1];
 
     NaviComponent(config).run();
 

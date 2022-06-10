@@ -1,17 +1,14 @@
 #include "utils.h"
+#include "config.h"
 #include "Board.h"
 #include "run_component.h"
 
 using namespace pg::messbase;
 
-struct CarComponentConfig : public ComponentConfig {
-    int light_r{0};
-};
-
 class CarComponent {
 public:
     CarComponent(const CarComponentConfig &config) : config_(config) {
-
+        Board::get_instance()->set_position_of_car(config.name, {config.init_pos_c, config.init_pos_r});
     }
 
     void run() {
