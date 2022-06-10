@@ -10,3 +10,6 @@
 [submodule "Backend/External/Rabbitmqc"]
 	path = Backend/External/Rabbitmqc
 	url = https://github.com/alanxz/rabbitmq-c.git
+[submodule "Backend/External/xpack/Xpack"]
+	path = Backend/External/xpack/Xpack
+	url = https://github.com/xyz347/xpack.git
