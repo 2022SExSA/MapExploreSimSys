@@ -46,3 +46,5 @@
 .cache
 build
 Build
+*.pro.user
+build-MapExploreSimSys*

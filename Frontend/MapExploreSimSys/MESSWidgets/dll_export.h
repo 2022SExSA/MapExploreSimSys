@@ -1,0 +1,12 @@
+#ifndef MESSWIDGETS_GLOBAL_H
+#define MESSWIDGETS_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(MESSWIDGETS_LIBRARY)
+#  define MESSWIDGETS_EXPORT Q_DECL_EXPORT
+#else
+#  define MESSWIDGETS_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // MESSWIDGETS_GLOBAL_H
