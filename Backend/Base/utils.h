@@ -2,9 +2,11 @@
 #define MESSBASE_UTILS_H
 
 #include "pg/pgutil.h"
+
 #include "fwd.h"
 #include "config.h"
 #include "SimpleAmqpClient/Channel.h"
+
 #include <dlfcn.h>
 #include <sstream>
 #include <unistd.h>
@@ -197,7 +199,6 @@ public:
         channel_ = AmqpClient::Channel::Open(opts);
 
         channel_->DeclareExchange(input_q);
-        channel_->DeclareQueue(input_q);
         channel_->BindQueue(input_q, input_q);
     }
 
@@ -212,8 +213,9 @@ private:
 
 inline void launch_component(const std::string& file, const std::string &config_json) {
     if (::fork() == 0) {
+        MESS_LOG("Launching {0}", file);
         ::execlp(file.c_str(), file.c_str(), config_json.c_str(), NULL);
-        MESS_ERR("Launch component {0} failed, config=[\n{1}\n]", file, config_json);
+        MESS_ERR("Launch {0} failed, config=[\n{1}\n]", file, config_json);
     }
 }
 

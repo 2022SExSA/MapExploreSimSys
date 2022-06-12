@@ -3,6 +3,8 @@
 #include "Board.h"
 #include "run_component.h"
 
+MESS_LOG_MODULE("Component/Car");
+
 using namespace pg::messbase;
 
 class CarComponent {
@@ -30,9 +32,7 @@ private:
         if (op.value().op == "go-next") {
             auto *board = Board::get_instance();
             auto pos = board->get_next_routing_position(car->config_.mq_name);
-            if (!pos.has_value()) {
-                MESS_LOG("Empty {0}", pgfmt::format(ROUTLIST_NAME_FROMAT, car->config_.mq_name));
-            } else {
+            if (pos.has_value()) {
                 int x = pos.value().x;
                 int y = pos.value().y;
                 MESS_LOG("Update Car@{0} to ({1}, {2})", car->config_.mq_name, x, y);
@@ -60,17 +60,17 @@ private:
 };
 
 int main(int argc, char **argv) {
-    Board::get_instance()->init("T", "127.0.0.1", 6379);
+    if (argc != 2) return -1;
 
     CarComponentConfig config;
-    
-    config.mq_host = "192.168.111.1";
-    config.mq_port = 5672;
-    config.mq_username = "pgzxb";
-    config.mq_password = "pgzxb";
-    config.mq_name = Board::get_instance()->get_auth_token() + "_Car001";
 
-    config.light_r = 1;
+    try {
+        xpack::json::decode(argv[1], config);    
+    } catch (const std::exception&e) {
+        MESS_ERR("config={0}\nxpack.err={1}", argv[1], e.what());
+    }
+
+    Board::get_instance()->init(config.auth_token, config.redis_board_ip, config.redis_board_port);    
 
     CarComponent(config).run();
 

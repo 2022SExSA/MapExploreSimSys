@@ -5,6 +5,12 @@
 #include "Board.h"
 #include "Xpack/json.h"
 
+// Linux headers
+#include <sys/types.h>
+#include <sys/wait.h>
+
+MESS_LOG_MODULE("Component/Controller");
+
 using namespace pg::messbase;
 
 class Controller {
@@ -24,15 +30,22 @@ public:
         PGZXB_DEBUG_ASSERT(config_.navigator_components_config.size() > 0);
 
         for (const auto &car_config : config_.car_components_config) {
-            launch_component("Car", xpack::json::encode(car_config));
+            // FIXME: Bad smell: hardcode
+            launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Car", xpack::json::encode(car_config));
+            car_components.push_back(C2Call{car_config});
         }
         for (const auto &navi_config : config_.navigator_components_config) {
-            launch_component("Navigator", xpack::json::encode(navi_config));
+            // FIXME: Bad smell: hardcode
+            launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Navigator", xpack::json::encode(navi_config));
+            navi_components.push_back(C2Call{navi_config});
         }
     }
 
     void run() {
+        int i = 0;
+        config_.fps = 1;
         while (true) {
+            std::cerr << "RUNNING" << i++ << "\n";
             const auto start = std::chrono::steady_clock::now();
             ///////////////////////////////////////////////////////
             //|________________Update Frame_____________________|//
@@ -54,9 +67,10 @@ public:
             std::vector<Op> command_for_navigators(navi_count);
             for (
                 int car_idx = 0, navi_idx = 0;
-                car_idx < car_count; 
+                car_idx < car_count && navi_idx < navi_count;
                 ++car_idx, navi_idx = (navi_idx + 1) % navi_count
             ) {
+                PGZXB_DEBUG_ASSERT(navi_count != 0);
                 command_for_navigators[navi_idx].args.push_back(car_ids[car_idx]);
             }
             for (int i = 0; i < navi_count; ++i) {
@@ -95,8 +109,12 @@ int main(int argc, char **argv) {
     if (argc != 2) return -1;
 
     Config config;
-    const char *config_json = argv[1];
-    xpack::json::decode(config_json, config);
+
+    try {
+        xpack::json::decode(argv[1], config);    
+    } catch (const std::exception&e) {
+        MESS_ERR("config={0}\nxpack.err={1}", argv[1], e.what());
+    }
     
     // Init Board
     Board::get_instance()->init(config.auth_token, config.redis_board_ip, config.redis_board_port);
@@ -104,5 +122,7 @@ int main(int argc, char **argv) {
     // Create Controller & Run
     Controller(config).run();
 
+    // Wait all children
+    wait(nullptr);
     return 0;
 }

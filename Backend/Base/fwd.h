@@ -10,9 +10,18 @@
 
 #ifdef MESS_WITH_LOG
 #include <filesystem>
+
+#define MESS_LOG_MODULE(name) \
+    MESSBASE_NAMESPACE_START \
+    namespace { \
+    bool log_flag_##__LINE__ = mess_set_log_module_name(name); \
+    } \
+    MESSBASE_NAMESPACE_END
+
 #define MESS_LOG(fmt, ...) \
     std::cerr << pgfmt::format( \
-        "[MapExploreSimSys-Backend]{0}:{1} LOG: {2}\n", \
+        "[MESS/{0}] {1}:{2} LOG: {3}\n", \
+        pg::messbase::mess_log_module_name, \
         std::filesystem::relative(__FILE__).string(), \
         __LINE__, \
         pgfmt::format(fmt, __VA_ARGS__))
@@ -28,6 +37,8 @@
 
 MESSBASE_NAMESPACE_START
 
+extern const char *mess_log_module_name;
+
 using Json = nlohmann::json;
 constexpr char ROUTLIST_NAME_FROMAT[]     = "RoutList@{0}";  // RoutList@Car001
 constexpr char CAR_POSITION_NAME_FORMAT[] = "Position@{0}";  // Position@@Car001
@@ -39,6 +50,8 @@ template <typename ...T>
 inline void pgzxb_unused(T &&... t) {
     (void(t), ...);
 }
+
+bool mess_set_log_module_name(const char * name);
 
 MESSBASE_NAMESPACE_END
 #endif

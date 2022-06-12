@@ -48,27 +48,18 @@ public:
             return Point<int>{json["x"], json["y"]};
         }
         MESS_ERR_IF(reply->type != REDIS_REPLY_NIL, "rpop {0} failed", routlist_name);
+        MESS_LOG("Empty {0}", routlist_name);
         return std::nullopt;
     }
 
     long long add_position_to_routlist(const std::string &car_name, const Point<int> &pos) {
-        return add_position_to_routlist(car_name, std::vector<Point<int>>{pos,});
-    }
-
-    long long add_position_to_routlist(const std::string &car_name, const std::vector<Point<int>> &pos_list) {
-        if (pos_list.empty()) return -1;
         // lpush {auth-token}_RoutList@{car-name} "{json1}" "{json2}" ...
         auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
-        std::string pos_list_str;
-        for (const auto &p : pos_list) {
-            Json json = Json::object();
-            json["x"] = p.x;
-            json["y"] = p.y;
-            pos_list_str.append("\"")
-                        .append(json.dump())
-                        .append("\" ");
-        }
-        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "lpush %s \"%s\"", routlist_name.c_str(), pos_list_str.c_str());
+        Json json = Json::object();
+        json["x"] = pos.x;
+        json["y"] = pos.y;
+        std::string pos_list_str = json.dump();
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "lpush %s %s", routlist_name.c_str(), pos_list_str.c_str());
         MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "lpush {0} {1} failed: errmsg={2}", routlist_name, pos_list_str, reply->str);
         if (reply->type == REDIS_REPLY_INTEGER) {
             return reply->integer;

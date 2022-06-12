@@ -4,6 +4,8 @@
 #include "run_component.h"
 #include "navigator_plugin_utils.h"
 
+MESS_LOG_MODULE("Component/Navigator");
+
 using namespace pg::messbase;
 
 // 2 algorithms(Combined as a dll):
@@ -78,17 +80,16 @@ private:
 
 int main(int argc, char **argv) {
     if (argc != 2) return -1;
-    Board::get_instance()->init("T", "127.0.0.1", 6379);
 
     NaviComponentConfig config;
-    
-    config.mq_host = "192.168.111.1";
-    config.mq_port = 5672;
-    config.mq_username = "pgzxb";
-    config.mq_password = "pgzxb";
-    config.mq_name = Board::get_instance()->get_auth_token() + "_Navigator001";
 
-    config.plugin_path = argv[1];
+    try {
+        xpack::json::decode(argv[1], config);    
+    } catch (const std::exception&e) {
+        MESS_ERR("config={0}\nxpack.err={1}", argv[1], e.what());
+    }
+
+    Board::get_instance()->init(config.auth_token, config.redis_board_ip, config.redis_board_port);    
 
     NaviComponent(config).run();
 
