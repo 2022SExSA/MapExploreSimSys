@@ -44,11 +44,11 @@ private:
                 // Light grid on map
                 int start_x = std::max(x - car->config_.light_r, 0);
                 int start_y = std::max(y - car->config_.light_r, 0);
-                int end_x = start_x + car->config_.light_r;
-                int end_y = start_y + car->config_.light_r;
+                int end_x = x + car->config_.light_r;
+                int end_y = y + car->config_.light_r;
                 for (int c = start_x; c <= end_x; ++c) {
                     for (int r = start_y; r <= end_y; ++r) {
-                        board->set_grid_of_map(r, c, 1);
+                        board->set_grid_of_map(r, c, MAP_GRID_RAW_FLAG);
                     }
                 }
             }

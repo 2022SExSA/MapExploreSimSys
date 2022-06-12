@@ -16,7 +16,7 @@ include_directories(External/xpack)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 add_definitions(-DPGZXB_DEBUG)
-add_definitions(-DMESS_WITH_LOG)
+# add_definitions(-DMESS_WITH_LOG)
 add_definitions(-DMESSBASE_LIB)
 add_definitions(-D__STDC_FORMAT_MACROS)
 add_definitions(-Wall)

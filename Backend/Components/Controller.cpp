@@ -22,12 +22,15 @@ public:
         const auto [w, h] = map.size;
         for (int r = 0; r < h; ++r) {
             for (int c = 0; c < w; ++c) {
-                board.set_grid_of_map(r, c, 0);
+                board.set_grid_of_map(r, c, MAP_GRID_COVERED_FLAG);
                 board.set_grid_of_map_block(r, c, (bool)(map.map_code[r * w + c] - '0'));
             }
         }
 
         PGZXB_DEBUG_ASSERT(config_.navigator_components_config.size() > 0);
+
+        launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/View", xpack::json::encode(config_.view_config));
+        view_component = C2Call{config_.view_config};
 
         for (const auto &car_config : config_.car_components_config) {
             // FIXME: Bad smell: hardcode
@@ -43,7 +46,6 @@ public:
 
     void run() {
         int i = 0;
-        config_.fps = 1;
         while (true) {
             std::cerr << "RUNNING" << i++ << "\n";
             const auto start = std::chrono::steady_clock::now();
@@ -56,7 +58,7 @@ public:
             std::vector<std::string> car_ids;
             for (const auto &car : config_.car_components_config) {
                 auto cnt = board.get_routlist_size(car.mq_name);
-                if (cnt == 0) {
+                if (cnt <= 0) {
                     car_ids.push_back(car.mq_name);
                 }
             }
@@ -88,6 +90,12 @@ public:
                 car.input(car_go_next_commmand.to_string());
             }
             
+            // Update View
+            Op update_view_op;
+            update_view_op.auth_token = config_.auth_token;
+            update_view_op.op = "update";
+            view_component.input(update_view_op.to_string());
+
             //|________________Update Frame_____________________|//
             ///////////////////////////////////////////////////////
             using namespace std::chrono_literals;
@@ -100,6 +108,7 @@ public:
     }
 private:
     Config config_;
+    C2Call view_component;
     std::vector<C2Call> car_components;
     std::vector<C2Call> navi_components;
 };
