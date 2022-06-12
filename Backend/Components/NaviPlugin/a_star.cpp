@@ -21,17 +21,24 @@ int MESSNP_ROUTING_FUNC_V1(MESSNP_PositionArray *rout_pos_array, const MESSNP_Po
 
     auto *pos_list = new std::vector<MESSNP_Position>;
 
-    pos_list->push_back({0, 0});
-    pos_list->push_back({0, 1});
-    pos_list->push_back({1, 1});
-    pos_list->push_back({1, 2});
-    pos_list->push_back({1, 3});
-    pos_list->push_back({1, 4});
-    pos_list->push_back({1, 5});
-    pos_list->push_back({2, 5});
-    pos_list->push_back({3, 5});
-    pos_list->push_back({4, 5});
-    pos_list->push_back({5, 5});
+    for (int i = 0; i < 45; ++i) {
+        pos_list->push_back({i, 0});
+    }
+    for (int i = 0; i < 60; ++i) {
+        pos_list->push_back({44, i});
+    }
+
+    // pos_list->push_back({0, 0});
+    // pos_list->push_back({0, 1});
+    // pos_list->push_back({1, 1});
+    // pos_list->push_back({1, 2});
+    // pos_list->push_back({1, 3});
+    // pos_list->push_back({1, 4});
+    // pos_list->push_back({1, 5});
+    // pos_list->push_back({2, 5});
+    // pos_list->push_back({3, 5});
+    // pos_list->push_back({4, 5});
+    // pos_list->push_back({5, 5});
 
     rout_pos_array->array = pos_list->data();
     rout_pos_array->size = pos_list->size();

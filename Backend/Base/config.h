@@ -47,14 +47,53 @@ struct MapInitConfig {
     XPACK(O(size, map_code));
 };
 
+struct ViewComponentConfig : public ComponentConfig {
+    struct Resource {
+        int id{-1};
+        std::string path;
+        XPACK(O(id, path));
+    };
+
+    struct WebSocketUrl {
+        std::string ip;
+        short port;
+        XPACK(O(ip, port));
+    };
+
+    Resource backrgound_img;
+    Resource covered_grid_img;
+    Resource nonblock_grid_img;
+    Resource block_grid_img;
+    Resource car_img;
+
+    // WebSocket Server Url
+    WebSocketUrl ws_url;
+
+    XPACK(
+        I(ComponentConfig), 
+        O(
+            backrgound_img,
+            covered_grid_img,
+            nonblock_grid_img,
+            block_grid_img,
+            car_img,
+            ws_url
+        )
+    );
+};
+
 struct Config : public ComponentConfig {
     // MQConfig mq_config;
     int fps{60};
     MapInitConfig map_config;
+    ViewComponentConfig view_config;
     std::vector<CarComponentConfig> car_components_config;
     std::vector<NaviComponentConfig> navigator_components_config;
 
-    XPACK(I(ComponentConfig), O(/*mq_config, */fps, map_config, car_components_config, navigator_components_config));
+    XPACK(
+        I(ComponentConfig),
+        O(/*mq_config, */fps, map_config, view_config, car_components_config, navigator_components_config)
+    );
 };
 
 MESSBASE_NAMESPACE_END

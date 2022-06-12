@@ -46,3 +46,4 @@
 .cache
 build
 Build
+*.log

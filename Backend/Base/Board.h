@@ -25,15 +25,30 @@ public:
         this->auth_token_ = auth_token;
     }
 
+    std::vector<std::string> get_all_cars() {
+        auto prefix = make_key(ROUTLIST_NAME_PREFIX);
+        auto res = get_keys_by_prefix(make_key(ROUTLIST_NAME_PREFIX));
+
+        const auto prefix_size = prefix.size();
+        std::for_each(res.begin(), res.end(), [prefix_size](auto &e) {
+            e = e.substr(prefix_size);
+        });
+
+        return res;
+    }
+
     int get_routlist_size(const std::string &car_name) {
         // llen {auth-token}RoutList@{car-name}
         auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "llen %s", routlist_name.c_str());
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "llen {0} failed: errmsg={1}", routlist_name, reply->str);
+        if (!reply || reply->type == REDIS_REPLY_ERROR) {
+            MESS_LOG("Get size of {0} failed", routlist_name);
+            return -1;
+        }
         if (reply->type == REDIS_REPLY_INTEGER) {
             return reply->integer;
         }
-        MESS_ERR("Get size of {0} failed", routlist_name);
+        MESS_LOG("Get size of {0} failed", routlist_name);
         return -1;
     }
 
@@ -41,9 +56,9 @@ public:
         // rpop {auth-token}RoutList@{car-name}
         auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "rpop %s", routlist_name.c_str());
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "rpop {0} failed: errmsg={1}", routlist_name, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "rpop {0} failed: errmsg={1}", routlist_name, std::string(reply->str));
         if (reply->type == REDIS_REPLY_STRING) {
-            Json json = Json::parse(reply->str);
+            Json json = Json::parse(std::string(reply->str));
             PGZXB_DEBUG_ASSERT(json.is_object());
             return Point<int>{json["x"], json["y"]};
         }
@@ -60,7 +75,7 @@ public:
         json["y"] = pos.y;
         std::string pos_list_str = json.dump();
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "lpush %s %s", routlist_name.c_str(), pos_list_str.c_str());
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "lpush {0} {1} failed: errmsg={2}", routlist_name, pos_list_str, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "lpush {0} {1} failed: errmsg={2}", routlist_name, pos_list_str, std::string(reply->str));
         if (reply->type == REDIS_REPLY_INTEGER) {
             return reply->integer;
         }
@@ -72,7 +87,7 @@ public:
         // hmget {auth-token}_Position@{car-name} x y
         auto position_name = make_key(CAR_POSITION_NAME_FORMAT, car_name);
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s x y", position_name.c_str());
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} x y failed: errmsg={1}", position_name, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} x y failed: errmsg={1}", position_name, std::string(reply->str));
         if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 2) {
             if (reply->element[0]->type == REDIS_REPLY_STRING && reply->element[1]->type == REDIS_REPLY_STRING) {
                 return Point<int>{std::atoi(reply->element[0]->str), std::atoi(reply->element[1]->str)};
@@ -87,7 +102,7 @@ public:
         // hmset {auth-token}_Position@{car-name} x {pos.x} y {pos.y}
         auto position_name = make_key(CAR_POSITION_NAME_FORMAT, car_name);
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s x %d y %d", position_name.c_str(), pos.x, pos.y);
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmset %s x %d y %d failed: errmsg={1}", position_name.c_str(), pos.x, pos.y, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmset %s x %d y %d failed: errmsg={1}", position_name.c_str(), pos.x, pos.y, std::string(reply->str));
         return reply && reply->type != REDIS_REPLY_ERROR;
     }
 
@@ -127,7 +142,7 @@ public:
     void set_map_size(int w, int h) {
         auto map_size_name = make_key(MAP_SIZE_NAME);
         auto *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s w %d h %d", map_size_name.c_str(), w, h);
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} w {1} h {2} failed: errmsg={3}", map_size_name, w, h, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} w {1} h {2} failed: errmsg={3}", map_size_name, w, h, std::string(reply->str));
     }
 
     std::tuple<int, int> get_map_size() {
@@ -156,7 +171,7 @@ private:
 
         // setbit {key} {offset} {val}
         auto *reply = (redisReply*)redisCommand(redis_ctx_, "setbit %s %d %d", key.c_str(), offset, val);
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "setbit {0} {1} {2} failed: errmsg={3}", key, offset, val, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "setbit {0} {1} {2} failed: errmsg={3}", key, offset, val, std::string(reply->str));
         PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
         return reply->integer;
     }
@@ -166,9 +181,24 @@ private:
 
         // getbit {key} {offset}
         auto *reply = (redisReply*)redisCommand(redis_ctx_, "getbit %s %d", key.c_str(), offset);
-        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "getbit {0} {1} failed: errmsg={2}", key, offset, reply->str);
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "getbit {0} {1} failed: errmsg={2}", key, offset, std::string(reply->str));
         PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_INTEGER);
         return reply->integer;
+    }
+
+    std::vector<std::string> get_keys_by_prefix(const std::string &prefix) {
+        // keys {prefix}
+        auto *reply = (redisReply*)redisCommand(redis_ctx_, "keys %s*", prefix.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "keys {0}* failed: errmsg={1}", prefix, std::string(reply->str));
+        PGZXB_DEBUG_ASSERT(reply->type == REDIS_REPLY_ARRAY);
+        
+        std::vector<std::string> keys;
+        for (std::size_t i = 0; i < reply->elements; ++i) {
+            PGZXB_DEBUG_ASSERT(reply->element[i]->type == REDIS_REPLY_STRING);
+            keys.push_back(reply->element[i]->str);
+        }
+
+        return keys;
     }
 
     redisContext *redis_ctx_{nullptr};

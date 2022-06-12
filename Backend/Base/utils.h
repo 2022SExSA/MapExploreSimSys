@@ -190,6 +190,8 @@ using NaviPlugin = Dll;
 
 class C2Call {
 public:
+    C2Call() = default;
+
     C2Call(const MQConfig &config) :config_(config) {
         auto input_q = config_.mq_name + ".input";
         AmqpClient::Channel::OpenOpts opts;
@@ -217,6 +219,19 @@ inline void launch_component(const std::string& file, const std::string &config_
         ::execlp(file.c_str(), file.c_str(), config_json.c_str(), NULL);
         MESS_ERR("Launch {0} failed, config=[\n{1}\n]", file, config_json);
     }
+}
+
+inline Json make_response_json_data(int err_code, const Json &data) {
+    // {
+    //     "code": <code:int>,
+    //     "msg": "msg",
+    //     "data": json-object
+    // }
+    Json resp /* Json::object() */;
+    resp["code"] = err_code;
+    resp["msg"]  = "";/* err_code_to_zhCN_str(err_code); */
+    resp["data"] = data;
+    return resp;
 }
 
 MESSBASE_NAMESPACE_END

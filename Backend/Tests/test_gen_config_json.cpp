@@ -10,6 +10,9 @@ PGTEST_CASE(gen_config_json) {
     using namespace pg::messbase;
     namespace fs = std::filesystem;
 
+    auto path = fs::path(__FILE__);
+    path = path.parent_path();
+
     ComponentConfig comp_config;
 
     // For auth
@@ -29,7 +32,7 @@ PGTEST_CASE(gen_config_json) {
     Config config;
     (ComponentConfig&)config = comp_config;
 
-    config.fps = 60;
+    config.fps = 1;
 
     config.map_config.size = {60, 60};
     config.map_config.map_code = std::string(60 * 60, '0');
@@ -45,13 +48,13 @@ PGTEST_CASE(gen_config_json) {
     car_config.mq_name = car_config.auth_token + "_Car001";
     car_config.init_pos_r = 0;
     car_config.init_pos_c = 0;
-    car_config.light_r = 1;
+    car_config.light_r = 6;
     config.car_components_config.push_back(car_config);
 
     car_config.mq_name = car_config.auth_token + "_Car002";
     car_config.init_pos_r = 59;
     car_config.init_pos_c = 59;
-    car_config.light_r = 1;
+    car_config.light_r = 6;
     config.car_components_config.push_back(car_config);
 
     NaviComponentConfig navi_config;
@@ -60,10 +63,18 @@ PGTEST_CASE(gen_config_json) {
     navi_config.plugin_path = "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_a_star.so";
     config.navigator_components_config.push_back(navi_config);
 
-    auto path = fs::path(__FILE__);
-    path = path.parent_path();
-    path /= "assets/simple-config.json";
-    std::ofstream of(path.string());
+    ViewComponentConfig view_config;
+    (ComponentConfig&)view_config = comp_config;
+    view_config.mq_name = car_config.auth_token + "_View";
+    view_config.backrgound_img    = {0, "background.png"};
+    view_config.covered_grid_img  = {1, "covered_grid.png"};
+    view_config.nonblock_grid_img = {2, "nonblock_grid.jpg"};
+    view_config.block_grid_img    = {3, "block_grid.gif"};
+    view_config.car_img           = {4, "car.gif"};
+    view_config.ws_url = {"", 9876};
+    config.view_config = view_config;
+
+    std::ofstream of((path / "assets/simple-config.json").string());
     of << xpack::json::encode(config);
 
     return true;
