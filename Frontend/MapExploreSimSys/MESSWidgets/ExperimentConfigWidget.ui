@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ExperimentConfigWidget</class>
+ <widget class="QWidget" name="ExperimentConfigWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>203</width>
+    <height>513</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_4">
+   <item>
+    <widget class="QToolBox" name="toolBoxConfigs">
+     <property name="currentIndex">
+      <number>2</number>
+     </property>
+     <widget class="QWidget" name="pageConfigCars">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>185</width>
+        <height>417</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>配置小车</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1">
+       <item>
+        <widget class="ObjectEditWidget" name="carEdit" native="true"/>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listWidgetCars"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageConfigNavigators">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>185</width>
+        <height>417</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>配置导航器</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1">
+       <item>
+        <widget class="ObjectEditWidget" name="navigatorEdit" native="true"/>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listWidgetNavigators"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageConfigOthers">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>185</width>
+        <height>417</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>其他配置</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="ObjectEditWidget" name="navigatorEdit_2" native="true"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonImportMap">
+         <property name="text">
+          <string>导入文件</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ObjectEditWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">ObjectEditWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

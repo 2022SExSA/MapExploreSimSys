@@ -1,7 +1,6 @@
-QT += widgets websockets
+QT       += core gui
 
-TEMPLATE = lib
-DEFINES += MESSWIDGETS_LIBRARY
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
 
@@ -17,32 +16,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    BaseDisplayWidget.cpp \
-    ExperimentConfigWidget.cpp \
-    MESSDisplayWidget.cpp \
-    MESSSimulationWidget.cpp \
-    ObjectEditWidget.cpp \
-    ObjectEntryEditWidget.cpp
+    main.cpp
 
-HEADERS += \
-    BaseDisplayWidget.h \
-    ExperimentConfigWidget.h \
-    MESSDisplayWidget.h \
-    MESSSimulationWidget.h \
-    ObjectEditWidget.h \
-    ObjectEntryEditWidget.h \
-    config.h \
-    dll_export.h \
-    utils.h
+HEADERS +=
+
+FORMS +=
 
 # Default rules for deployment.
-unix {
-    target.path = /usr/lib
-}
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-FORMS += \
-    ExperimentConfigWidget.ui \
-    MESSSimulationWidget.ui
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../MESSWidgets/release/ -lMESSWidgets
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../MESSWidgets/debug/ -lMESSWidgets
+else:unix: LIBS += -L$$OUT_PWD/../../MESSWidgets/ -lMESSWidgets
 
-INCLUDEPATH += $$PWD/../../External/xpack/
+INCLUDEPATH += $$PWD/../../MESSWidgets
+DEPENDPATH += $$PWD/../../MESSWidgets
+INCLUDEPATH += $$PWD/../../../External/xpack/
