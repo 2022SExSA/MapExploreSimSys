@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -100,6 +100,20 @@
        </widget>
       </item>
       <item row="9" column="0">
+       <widget class="QPushButton" name="pushButton_3">
+        <property name="text">
+         <string>另存地图</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QPushButton" name="pushButton_4">
+        <property name="text">
+         <string>打开地图</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0">
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
