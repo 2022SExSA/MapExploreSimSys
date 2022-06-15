@@ -12,6 +12,8 @@
 #include <QPoint>
 #include <QDebug>
 
+#include "xpack/json.h"
+
 enum class ReCapPolicy : unsigned char {
     PopFront,
     PopBack,
@@ -190,6 +192,34 @@ private:
     int m_xn, m_yn;
     std::set<int> m_helper;
 };
+
+using QNAM = class QNetworkAccessManager;
+
+void asyncHttpGET(
+    QNAM *mgr, const QString &url,
+    const std::function<void(const QString &)> &then,
+    const std::function<void(const QString &)> &err);
+
+void asyncHttpPOST(
+    QNAM *mgr, const QString & url, const QByteArray &body,
+    const std::function<void (const QString &)> & then,
+    const std::function<void(const QString &)> &err);
+
+struct RespData {
+    int code{-1};
+    std::string msg;
+
+    struct Data {
+        std::string view_http_url;
+        std::string view_ws_url;
+
+        XPACK(O(view_http_url, view_ws_url));
+    } data;
+
+    XPACK(O(code, msg, data));
+};
+
+RespData json2ResponseData(const std::string &str, bool *ok = nullptr);
 
 #endif // UTILS_H
 

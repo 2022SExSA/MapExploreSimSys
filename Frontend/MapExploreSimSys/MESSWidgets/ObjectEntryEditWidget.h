@@ -43,6 +43,7 @@ public:
     explicit ObjectEntryEditWidget(QWidget *parent = nullptr);
     void init(ObjectEntryEditConfig *config);
     std::tuple<QVariant, const char*> getValue();
+    QWidget *getEditWidget();
 private:
     QLabel *m_label{nullptr};
     QWidget *m_editWdiget{nullptr};

@@ -1,4 +1,4 @@
-QT += widgets websockets
+QT += widgets websockets network
 
 TEMPLATE = lib
 DEFINES += MESSWIDGETS_LIBRARY
@@ -22,7 +22,8 @@ SOURCES += \
     MESSDisplayWidget.cpp \
     MESSSimulationWidget.cpp \
     ObjectEditWidget.cpp \
-    ObjectEntryEditWidget.cpp
+    ObjectEntryEditWidget.cpp \
+    utils.cpp
 
 HEADERS += \
     BaseDisplayWidget.h \
