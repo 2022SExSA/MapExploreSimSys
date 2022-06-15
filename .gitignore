@@ -46,6 +46,7 @@
 .cache
 build
 Build
-*.pro.user
+*.pro.user*
 build-MapExploreSimSys*
+*.DS_Store
 *.log

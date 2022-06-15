@@ -1,4 +1,5 @@
 QT += widgets websockets
+QT       += charts
 
 TEMPLATE = lib
 DEFINES += MESSWIDGETS_LIBRARY
@@ -18,11 +19,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     BaseDisplayWidget.cpp \
-    MESSDisplayWidget.cpp
+    MESSDisplayWidget.cpp \
+    StatisticsWidget.cpp
 
 HEADERS += \
     BaseDisplayWidget.h \
     MESSDisplayWidget.h \
+    StatisticsWidget.h \
     dll_export.h
 
 # Default rules for deployment.
@@ -31,4 +34,5 @@ unix {
 }
 !isEmpty(target.path): INSTALLS += target
 
-FORMS +=
+FORMS += \
+    StatisticsWidget.ui
