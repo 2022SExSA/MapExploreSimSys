@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ExperimentConfigWidget</class>
+ <widget class="QWidget" name="ExperimentConfigWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>508</width>
+    <height>518</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_4">
+   <item>
+    <widget class="QToolBox" name="toolBoxConfigs">
+     <property name="currentIndex">
+      <number>2</number>
+     </property>
+     <widget class="QWidget" name="pageConfigCars">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>490</width>
+        <height>378</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>配置小车</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1">
+       <item>
+        <widget class="ObjectEditWidget" name="carEdit" native="true"/>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listWidgetCars"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageConfigNavigators">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>490</width>
+        <height>378</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>配置导航器</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QWidget" name="navigatorEdit" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,3,1">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>导航算法</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxNaviAlgo"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="text">
+             <string>+</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listWidgetNavigators"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageConfigOthers">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>490</width>
+        <height>378</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>其他配置</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QWidget" name="navigatorEdit_2" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>FPS:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinBoxFPS">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>60</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonImportMap">
+         <property name="text">
+          <string>导入地图</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widgetExtGroup" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,8,2">
+      <item>
+       <widget class="QPushButton" name="pushButtonExport">
+        <property name="text">
+         <string>导出配置</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonImport">
+        <property name="text">
+         <string>导入配置</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonPreviewExperiment">
+        <property name="text">
+         <string>预览实验</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ObjectEditWidget</class>
+   <extends>QWidget</extends>
+   <header>ObjectEditWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

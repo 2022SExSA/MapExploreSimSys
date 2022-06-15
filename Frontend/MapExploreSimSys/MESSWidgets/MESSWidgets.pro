@@ -1,5 +1,4 @@
-QT += widgets websockets
-QT       += charts
+QT += widgets websockets network charts
 
 TEMPLATE = lib
 DEFINES += MESSWIDGETS_LIBRARY
@@ -21,12 +20,25 @@ SOURCES += \
     BaseDisplayWidget.cpp \
     MESSDisplayWidget.cpp \
     StatisticsWidget.cpp
+    ExperimentConfigWidget.cpp \
+    MESSDisplayWidget.cpp \
+    MESSSimulationWidget.cpp \
+    ObjectEditWidget.cpp \
+    ObjectEntryEditWidget.cpp \
+    utils.cpp
 
 HEADERS += \
     BaseDisplayWidget.h \
+    ExperimentConfigWidget.h \
     MESSDisplayWidget.h \
     StatisticsWidget.h \
     dll_export.h
+    MESSSimulationWidget.h \
+    ObjectEditWidget.h \
+    ObjectEntryEditWidget.h \
+    config.h \
+    dll_export.h \
+    utils.h
 
 # Default rules for deployment.
 unix {
@@ -36,3 +48,7 @@ unix {
 
 FORMS += \
     StatisticsWidget.ui
+    ExperimentConfigWidget.ui \
+    MESSSimulationWidget.ui
+
+INCLUDEPATH += $$PWD/../../External/xpack/

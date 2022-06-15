@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MESSSimulationWidget</class>
+ <widget class="QWidget" name="MESSSimulationWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>898</width>
+    <height>490</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="5,2">
+   <item>
+    <widget class="MESSDisplayWidget" name="widgetDisplay" native="true"/>
+   </item>
+   <item>
+    <widget class="QWidget" name="widgetConfigGroup" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="11,1">
+      <item>
+       <widget class="ExperimentConfigWidget" name="widgetConfig" native="true"/>
+      </item>
+      <item>
+       <widget class="QWidget" name="widgetButtonGroup" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QPushButton" name="pushButtonStart">
+           <property name="text">
+            <string>开始</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButtonPause">
+           <property name="text">
+            <string>暂停</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MESSDisplayWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">MESSDisplayWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ExperimentConfigWidget</class>
+   <extends>QWidget</extends>
+   <header>ExperimentConfigWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

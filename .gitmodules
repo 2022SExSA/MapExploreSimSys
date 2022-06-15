@@ -13,3 +13,6 @@
 [submodule "Backend/External/xpack/Xpack"]
 	path = Backend/External/xpack/Xpack
 	url = https://github.com/xyz347/xpack.git
+[submodule "Frontend/External/xpack/xpack"]
+	path = Frontend/External/xpack/xpack
+	url = https://github.com/xyz347/xpack.git

@@ -10,12 +10,13 @@
 #include <QAbstractSocket>
 
 MESSDisplayWidget::MESSDisplayWidget(
-        const QString &http_url,
-        const QString &ws_url,
         QWidget *parent)
-    : BaseDisplayWidget(parent),
-      http_server_url_(http_url),
-      ws_server_url_(ws_url) {
+    : BaseDisplayWidget(parent) {
+}
+
+void MESSDisplayWidget::start(const QString & http_url, const QString & ws_url) {
+    http_server_url_ = http_url;
+    ws_server_url_ = ws_url;
     ws_socket_ = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     http_mgr = new QNetworkAccessManager(this);
     ws_socket_->open(ws_server_url_);

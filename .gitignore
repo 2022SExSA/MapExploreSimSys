@@ -49,4 +49,5 @@ Build
 *.pro.user*
 build-MapExploreSimSys*
 *.DS_Store
+build-*
 *.log

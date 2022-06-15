@@ -12,10 +12,10 @@ class QNetworkAccessManager;
 class MESSWIDGETS_EXPORT MESSDisplayWidget : public BaseDisplayWidget {
     Q_OBJECT
 public:
-    explicit MESSDisplayWidget(
-            const QString &http_url,
-            const QString &ws_url,
-            QWidget *parent = nullptr);
+    explicit MESSDisplayWidget(QWidget *parent = nullptr);
+
+    void start(const QString &http_url,
+               const QString &ws_url);
 
     void paintEvent(QPaintEvent *event) override;
 public slots:
