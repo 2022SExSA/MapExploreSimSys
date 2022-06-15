@@ -1,4 +1,4 @@
-QT += widgets websockets network
+QT += widgets websockets network charts
 
 TEMPLATE = lib
 DEFINES += MESSWIDGETS_LIBRARY
@@ -18,6 +18,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     BaseDisplayWidget.cpp \
+    MESSDisplayWidget.cpp \
+    StatisticsWidget.cpp
     ExperimentConfigWidget.cpp \
     MESSDisplayWidget.cpp \
     MESSSimulationWidget.cpp \
@@ -29,6 +31,8 @@ HEADERS += \
     BaseDisplayWidget.h \
     ExperimentConfigWidget.h \
     MESSDisplayWidget.h \
+    StatisticsWidget.h \
+    dll_export.h
     MESSSimulationWidget.h \
     ObjectEditWidget.h \
     ObjectEntryEditWidget.h \
@@ -43,6 +47,7 @@ unix {
 !isEmpty(target.path): INSTALLS += target
 
 FORMS += \
+    StatisticsWidget.ui
     ExperimentConfigWidget.ui \
     MESSSimulationWidget.ui
 
