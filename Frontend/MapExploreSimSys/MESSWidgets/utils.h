@@ -197,13 +197,13 @@ using QNAM = class QNetworkAccessManager;
 
 void asyncHttpGET(
     QNAM *mgr, const QString &url,
-    const std::function<void(const QString &)> &then,
-    const std::function<void(const QString &)> &err);
+    std::function<void(const QString &)> then,
+    std::function<void(const QString &)> err);
 
 void asyncHttpPOST(
     QNAM *mgr, const QString & url, const QByteArray &body,
-    const std::function<void (const QString &)> & then,
-    const std::function<void(const QString &)> &err);
+    std::function<void (const QString &)> then,
+    std::function<void(const QString &)> err);
 
 struct RespData {
     int code{-1};

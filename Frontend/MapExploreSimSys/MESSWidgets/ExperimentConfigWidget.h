@@ -22,6 +22,7 @@ public:
     void showData();
     void clearShow();
     const ExperimentConfig &getInteralData();
+    void setAuthToken(const std::string &token);
 private slots:
     void on_pushButtonImportMap_clicked();
     void on_pushButton_clicked();

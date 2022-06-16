@@ -30,6 +30,7 @@ public:
 
     void paintEvent(QPaintEvent *event) override;
 public slots:
+    void reset();
     void addResource(int id, const QImage &img);
     void display(const std::vector<RenderOrder> &orders);
 private:

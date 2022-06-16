@@ -57,6 +57,11 @@ void BaseDisplayWidget::paintEvent(QPaintEvent *) {
     rendering_orders_.clear();
 }
 
+void BaseDisplayWidget::reset() {
+    this->img_cache_.clear();
+    this->rendering_orders_.clear();
+}
+
 void BaseDisplayWidget::addResource(int id, const QImage &img) {
     if (img_cache_.count(id)) {
         qInfo("Multi add resource %d", id);
@@ -65,7 +70,11 @@ void BaseDisplayWidget::addResource(int id, const QImage &img) {
 }
 
 void BaseDisplayWidget::display(const std::vector<RenderOrder> &orders) {
-    rendering_orders_ = std::move(orders);
+    rendering_orders_.insert(rendering_orders_.end(), orders.begin(), orders.end());
+//    for (const auto &e : rendering_orders_) {
+//        if (e.args[0] == 4) qDebug() << "Show Car";
+//    }
+//    qDebug() << rendering_orders_.size();
     this->update(); // trigger painEvent(...)
 }
 
