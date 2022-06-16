@@ -65,6 +65,7 @@ struct ViewComponentConfig : public ComponentConfig {
     Resource nonblock_grid_img;
     Resource block_grid_img;
     Resource car_img;
+    Resource future_route_img;
 
     // WebSocket Server Url
     WebSocketUrl ws_url;
@@ -77,6 +78,7 @@ struct ViewComponentConfig : public ComponentConfig {
             nonblock_grid_img,
             block_grid_img,
             car_img,
+            future_route_img,
             ws_url
         )
     );

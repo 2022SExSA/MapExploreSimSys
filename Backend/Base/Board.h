@@ -52,6 +52,26 @@ public:
         return -1;
     }
 
+    std::vector<Point<int>> get_all_pos_of_routlist(const std::string &car_name) {
+        // lrange {auth-token}RoutList@{car-name} 0 -1
+        auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "lrange %s 0 -1", routlist_name.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "lrange {0} 0 -1 failed: errmsg={1}", routlist_name, std::string(reply->str));
+        if (reply->type == REDIS_REPLY_ARRAY) {
+            std::vector<Point<int>> res;
+            const int len = reply->elements;
+            for (int i = 0; i < len; ++i) {
+                PGZXB_DEBUG_ASSERT(reply->element[i]->type == REDIS_REPLY_STRING);
+                Json json = Json::parse(std::string(reply->element[i]->str));
+                PGZXB_DEBUG_ASSERT(json.is_object());
+                res.push_back({json["x"], json["y"]});
+            }
+            return res;
+        }
+        MESS_LOG("Empty {0}", routlist_name);
+        return {};
+    }
+
     std::optional<Point<int>> get_next_routing_position(const std::string &car_name) {
         // rpop {auth-token}RoutList@{car-name}
         auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);

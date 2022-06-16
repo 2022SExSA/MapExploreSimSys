@@ -105,6 +105,7 @@ inline messbase::Config default_trans_frontend_config_to_backend(const Experimen
     view_config.covered_grid_img  = {1, "covered_grid.png"};
     view_config.nonblock_grid_img = {2, "nonblock_grid.jpg"};
     view_config.block_grid_img    = {3, "block_grid.gif"};
+    view_config.future_route_img  = {5, "future_route_grid.png"};
     view_config.car_img           = {4, "car.gif"};
     view_config.ws_url = {"", get_available_port()};
     result.view_config = view_config;

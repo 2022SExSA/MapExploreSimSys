@@ -21,6 +21,7 @@ enum class GRID_TYPE {
     NONBLOCK = NONE,
     BLOCK = 2,
     CAR = 3,
+    FUTURE_ROUTE = 4,
 };
 
 struct RenderOrder {
@@ -93,7 +94,7 @@ private:
         }
     }
 
-    std::vector<RenderOrder> gen_rendering_orders(const std::vector<std::vector<GRID_TYPE>> &grids) {
+    std::vector<RenderOrder> gen_rendering_orders(const std::vector<std::vector<GRID_TYPE>> &grids, bool background = true) {
         const int h = grids.size();
         PGZXB_DEBUG_ASSERT(h > 0);
         const int w = grids.back().size();
@@ -103,7 +104,7 @@ private:
         std::vector<RenderOrder> orders;
 
         // 0 level: background
-        {
+        if (background) {
             int virtual_map_width = virtual_grid_width * w;
             int virtual_map_height = virtual_grid_height * h;
             RenderOrder order;
@@ -144,10 +145,13 @@ private:
                 case GRID_TYPE::CAR :
                     order.args[0] = config_.car_img.id;
                     break;
+                case GRID_TYPE::FUTURE_ROUTE : 
+                    order.args[0] = config_.future_route_img.id;
+                    break;
                 default: break;
                 }
 
-                orders.push_back(order);
+                if (order.args[0] != -1) orders.push_back(order);
             }
         }
         return orders;
@@ -211,8 +215,25 @@ private:
                 }
             }
 
+            std::vector<std::vector<GRID_TYPE>> future_route_grids(h, std::vector<GRID_TYPE>(w, GRID_TYPE::NONE));
+            {
+                auto car_ids = board.get_all_cars();
+                for (const auto &id : car_ids) {
+                    auto pos_list = board.get_all_pos_of_routlist(id);
+                    for (const auto &e : pos_list) {
+                        if (e.x >= w || e.y >= h) {
+                            MESS_LOG("Routlist of car={0} out of bound(w={1}, h={2})", id, w, h);
+                            continue;
+                        }
+                        future_route_grids[e.y][e.x] = GRID_TYPE::FUTURE_ROUTE;
+                    }
+                }
+            }
+
             // Gen rendering-orders & Send orders to channels
-            auto orders = view->gen_rendering_orders(grids);
+            auto orders = view->gen_rendering_orders(grids, true);
+            auto future_route_orders = view->gen_rendering_orders(future_route_grids, false);
+            for (auto &e : future_route_orders) orders.push_back(std::move(e));
             view->display(orders);
 
             // Debug
@@ -270,7 +291,8 @@ int main(int argc, char **argv) {
             config.covered_grid_img,
             config.nonblock_grid_img,
             config.block_grid_img,
-            config.car_img
+            config.car_img,
+            config.future_route_img
         };
 
         // Slow
@@ -301,8 +323,11 @@ int main(int argc, char **argv) {
     // Init Board
     Board::get_instance()->init(config.auth_token, config.redis_board_ip, config.redis_board_port);    
 
-    websocket_server_run(&ws_server, 0);
+    auto ret = websocket_server_run(&ws_server, 0);
+    MESS_LOG("ret={0}", ret);
     mess_view_ctx = &ws_server;
+
+    std::atexit(exit);
 
     // Run component
     view.run();
