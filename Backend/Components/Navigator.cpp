@@ -53,7 +53,7 @@ private:
                 [[maybe_unused]] int err = pos_selector_func(&dest, &src, map_info_getter);
                 MESS_ERR_IF(err != 0, "", 1);
                 MESS_LOG("Navi for {0}, select dest: ({1}, {2})", car_id, dest.r, dest.c);
-                err = routing_func(&dest_pos_array, &src, &dest);
+                err = routing_func(&dest_pos_array, &src, &dest, map_info_getter);
                 MESS_ERR_IF(err != 0, "", 1);
                 MESS_LOG("Navi for {0}, routing: {1}",
                     car_id,

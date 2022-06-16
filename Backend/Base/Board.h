@@ -167,11 +167,12 @@ public:
 
     std::tuple<int, int> get_map_size() {
         auto map_size_name = make_key(MAP_SIZE_NAME);
-        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s w h", map_size_name.c_str());
+        auto cmd = std::string("hmget ").append(map_size_name).append(" w h");
+        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, cmd.c_str());
         MESS_ERR_IF(!map_size_reply || map_size_reply->type == REDIS_REPLY_ERROR, "hmget {0} w h failed: errmsg={1}", map_size_name, map_size_reply->str);
-        PGZXB_DEBUG_ASSERT(map_size_reply->type == REDIS_REPLY_ARRAY);
-        PGZXB_DEBUG_ASSERT(map_size_reply->element[0]->type == REDIS_REPLY_STRING);
-        PGZXB_DEBUG_ASSERT(map_size_reply->element[1]->type == REDIS_REPLY_STRING);
+        if (map_size_reply->type != REDIS_REPLY_ARRAY || map_size_reply->elements != 2) return {-1, -1};
+        if (map_size_reply->element[0]->type != REDIS_REPLY_STRING) return {-1, -1};
+        if (map_size_reply->element[1]->type != REDIS_REPLY_STRING) return {-1, -1};
         return {std::atoi(map_size_reply->element[0]->str), std::atoi(map_size_reply->element[1]->str)};
     }
 private:

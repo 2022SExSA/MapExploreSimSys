@@ -11,6 +11,7 @@
 #include <map>
 #include <list>
 
+#define MESS_WITH_LOG
 MESS_LOG_MODULE("View");
 
 using namespace pg::messbase;
@@ -206,7 +207,7 @@ private:
                     auto pos_opt = board.get_current_position_of_car(id);
                     if (pos_opt.has_value()) {
                         const auto &pos = pos_opt.value();
-                        if (pos.x >= w || pos.y >= h) {
+                        if (pos.x < 0 || pos.x >= w || pos.y < 0 || pos.y >= h) {
                             MESS_LOG("car={0} out of bound(w={1}, h={2})", id, w, h);
                             continue;
                         }
@@ -221,7 +222,7 @@ private:
                 for (const auto &id : car_ids) {
                     auto pos_list = board.get_all_pos_of_routlist(id);
                     for (const auto &e : pos_list) {
-                        if (e.x >= w || e.y >= h) {
+                        if (e.x < 0 || e.x >= w || e.y < 0 || e.y >= h) {
                             MESS_LOG("Routlist of car={0} out of bound(w={1}, h={2})", id, w, h);
                             continue;
                         }
@@ -323,8 +324,7 @@ int main(int argc, char **argv) {
     // Init Board
     Board::get_instance()->init(config.auth_token, config.redis_board_ip, config.redis_board_port);    
 
-    auto ret = websocket_server_run(&ws_server, 0);
-    MESS_LOG("ret={0}", ret);
+    websocket_server_run(&ws_server, 0);
     mess_view_ctx = &ws_server;
 
     std::atexit(exit);

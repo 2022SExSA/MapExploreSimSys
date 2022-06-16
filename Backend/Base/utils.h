@@ -8,6 +8,7 @@
 #include "SimpleAmqpClient/Channel.h"
 
 #include <cstddef>
+#include <cstdio>
 #include <dlfcn.h>
 #include <sstream>
 #include <unistd.h>
@@ -149,6 +150,12 @@ struct Op {
             result += arg;
         }
         return result;
+    }
+
+    bool operator==(const Op &o) {
+        return auth_token == o.auth_token &&
+               op == o.op &&
+               args == o.args;
     }
 
     static std::optional<Op> from_string(const std::string &str) { // tk op arg0 arg1 ...

@@ -56,9 +56,8 @@ public:
     }
 
     void run() {
-        int i = 0;
+        std::size_t freme_cnt = 0;
         while (true) {
-            std::cerr << "RUNNING" << i++ << "\n";
             const auto start = std::chrono::steady_clock::now();
             ///////////////////////////////////////////////////////
             //|________________Update Frame_____________________|//
@@ -91,12 +90,13 @@ public:
                 command_for_navigators[i].op = "navi";
                 command_for_navigators[i].auth_token = config_.auth_token;
                 navi_components[i].input(command_for_navigators[i].to_string());
-            }            
+            }
 
             // For each car: update car ({auth_token} go-next)
             Op car_go_next_commmand;
             car_go_next_commmand.auth_token = config_.auth_token;
             car_go_next_commmand.op = "go-next";
+            car_go_next_commmand.args.push_back(std::to_string(freme_cnt++));
             for (auto &car : car_components) {
                 car.input(car_go_next_commmand.to_string());
             }
