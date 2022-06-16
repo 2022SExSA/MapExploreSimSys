@@ -15,10 +15,13 @@ public:
     explicit ExperimentConfigWidget(QWidget *parent = nullptr);
     ~ExperimentConfigWidget();
 
-    QJsonValue getData();
-private:
-   void showData();
-   const ExperimentConfig &getInteralData();
+    bool checkData();
+    bool setDataFromJSON(const QJsonValue &json);
+    void setData(const ExperimentConfig &data);
+    std::string getData();
+    void showData();
+    void clearShow();
+    const ExperimentConfig &getInteralData();
 private slots:
     void on_pushButtonImportMap_clicked();
     void on_pushButton_clicked();

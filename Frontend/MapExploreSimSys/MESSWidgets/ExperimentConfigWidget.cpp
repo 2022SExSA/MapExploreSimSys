@@ -2,6 +2,8 @@
 #include "ui_ExperimentConfigWidget.h"
 #include "ObjectEditWidget.h"
 
+#include <ctime>
+
 #include <QFileDialog>
 #include <QJsonDocument>
 #include <QJsonValue>
@@ -87,14 +89,12 @@ ExperimentConfigWidget::~ExperimentConfigWidget() {
     delete ui;
 }
 
-QJsonValue ExperimentConfigWidget::getData() {
-    data_.fps = ui->spinBoxFPS->value();
-    QJsonDocument doc;
-    doc.fromJson(QByteArray(xpack::json::encode(data_).c_str()));
-    return doc.object();
+std::string ExperimentConfigWidget::getData() {
+    return xpack::json::encode(getInteralData());
 }
 
 void ExperimentConfigWidget::showData() {
+    clearShow();
     ui->spinBoxFPS->setValue(data_.fps);
 
     auto &cars_config = data_.car_components_config;
@@ -117,7 +117,56 @@ void ExperimentConfigWidget::showData() {
     }
 }
 
+void ExperimentConfigWidget::clearShow() {
+    ui->listWidgetCars->clear();
+    ui->listWidgetNavigators->clear();
+}
+
+bool ExperimentConfigWidget::checkData() {
+    // Bad proctice: cross gui and check-logic
+    QString msg;
+    int cnt = 0;
+
+#define POS_CHK_MSG QString("小车%1初始位置(行:%2, 列:%3)超出边界(高:%4, 宽:%5)\n") \
+    .arg(cnt).arg(car.init_pos_r).arg(car.init_pos_c).arg(data_.map_config.size.height).arg(data_.map_config.size.width)
+
+    if (data_.navigator_components_config.empty()) {
+        msg.append("至少要包括一个导航器\n");
+    }
+
+    for (const auto &car : data_.car_components_config) {
+        ++cnt;
+        if (car.init_pos_r < 0 || car.init_pos_r > data_.map_config.size.height)
+            msg.append(POS_CHK_MSG);
+        else if (car.init_pos_c < 0 || car.init_pos_c > data_.map_config.size.width)
+            msg.append(POS_CHK_MSG);
+    }
+
+    if (!msg.isEmpty()) QMessageBox::warning(this, "配置非法", msg);
+    return msg.isEmpty();
+}
+
+bool ExperimentConfigWidget::setDataFromJSON(const QJsonValue &json) {
+    Q_ASSERT(json.isObject());
+    auto json_obj = json.toObject();
+    QJsonDocument json_doc(json_obj);
+    ExperimentConfig data;
+    try {
+        xpack::json::decode(json_doc.toJson().data(), data);
+    } catch (const std::exception &e) {
+        return false;
+    }
+    return true;
+}
+
+void ExperimentConfigWidget::setData(const ExperimentConfig &data) {
+    data_ = data;
+}
+
 const ExperimentConfig &ExperimentConfigWidget::getInteralData() {
+    // Set random token (time)
+    data_.auth_token = "MESSAuthToken_" + std::to_string(std::time(nullptr));
+    // Get & Set FPS
     data_.fps = ui->spinBoxFPS->value();
     return data_;
 }
@@ -207,6 +256,7 @@ void ExperimentConfigWidget::on_pushButtonExport_clicked() {
 
 void ExperimentConfigWidget::on_pushButtonImport_clicked() {
     auto file_name = QFileDialog::getOpenFileName(this, {}, {}, "配置文件(*.json)");
+    if (file_name.isNull()) return;
     QFile file(file_name);
     bool ok = file.open(QIODevice::ReadOnly);
     if (!ok) {
@@ -217,6 +267,12 @@ void ExperimentConfigWidget::on_pushButtonImport_clicked() {
     auto json = file.readAll();
     try {
         xpack::json::decode(json.toStdString(), data_);
+        QMessageBox::information(this, "解析成功",
+            QString("地图: %1x%2; 小车数量: %3; 导航器数量: %4")
+                         .arg(data_.map_config.size.width)
+                         .arg(data_.map_config.size.height)
+                         .arg(data_.car_components_config.size())
+                         .arg(data_.navigator_components_config.size()));
     } catch (const std::exception& e) {
         QMessageBox::warning(this, "错误", QString("配置文件%1解析失败\n%2")
                              .arg(file_name).arg(e.what()));
