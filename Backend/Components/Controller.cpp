@@ -30,7 +30,6 @@ public:
         PGZXB_DEBUG_ASSERT(config_.navigator_components_config.size() > 0);
 
         launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/View", xpack::json::encode(config_.view_config));
-        view_component = C2Call{config_.view_config};
 
         for (const auto &car_config : config_.car_components_config) {
             // FIXME: Bad smell: hardcode
@@ -42,6 +41,18 @@ public:
             launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Navigator", xpack::json::encode(navi_config));
             navi_components.push_back(C2Call{navi_config});
         }
+
+        // Better
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(200ms);
+
+        view_component = C2Call{config_.view_config};
+        for (const auto &car_config : config_.car_components_config) {
+            car_components.push_back(C2Call{car_config});
+        }
+        for (const auto &navi_config : config_.navigator_components_config) {
+            navi_components.push_back(C2Call{navi_config});
+        }     
     }
 
     void run() {

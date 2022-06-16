@@ -141,7 +141,7 @@ public:
 
     void set_map_size(int w, int h) {
         auto map_size_name = make_key(MAP_SIZE_NAME);
-        auto *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s w %d h %d", map_size_name.c_str(), w, h);
+        [[maybe_unused]] auto *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s w %d h %d", map_size_name.c_str(), w, h);
         MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} w {1} h {2} failed: errmsg={3}", map_size_name, w, h, std::string(reply->str));
     }
 

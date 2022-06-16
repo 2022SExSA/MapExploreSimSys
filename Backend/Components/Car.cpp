@@ -38,7 +38,7 @@ private:
                 MESS_LOG("Update Car@{0} to ({1}, {2})", car->config_.mq_name, x, y);
 
                 // Update pos of this car
-                auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
+                [[maybe_unused]] auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
                 MESS_ERR_IF(!ok, "Car {0} move to failed", car->config_.mq_name);
                 
                 // Light grid on map

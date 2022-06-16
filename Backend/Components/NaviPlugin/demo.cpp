@@ -21,11 +21,11 @@ int MESSNP_ROUTING_FUNC_V1(MESSNP_PositionArray *rout_pos_array, const MESSNP_Po
 
     auto *pos_list = new std::vector<MESSNP_Position>;
 
-    for (int i = 0; i < 45; ++i) {
+    for (int i = 0; i < 5; ++i) {
         pos_list->push_back({i, 0});
     }
-    for (int i = 0; i < 60; ++i) {
-        pos_list->push_back({44, i});
+    for (int i = 0; i < 5; ++i) {
+        pos_list->push_back({5, i});
     }
 
     // pos_list->push_back({0, 0});

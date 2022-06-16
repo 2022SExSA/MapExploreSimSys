@@ -1,5 +1,6 @@
 #include "Xpack/json.h"
 #include "config.h"
+#include "fwd.h"
 #include "run_component.h"
 #include "Board.h"
 
@@ -9,6 +10,8 @@
 
 #include <map>
 #include <list>
+
+MESS_LOG_MODULE("View");
 
 using namespace pg::messbase;
 
@@ -199,6 +202,10 @@ private:
                     auto pos_opt = board.get_current_position_of_car(id);
                     if (pos_opt.has_value()) {
                         const auto &pos = pos_opt.value();
+                        if (pos.x >= w || pos.y >= h) {
+                            MESS_LOG("car={0} out of bound(w={1}, h={2})", id, w, h);
+                            continue;
+                        }
                         grids[pos.y][pos.x] = GRID_TYPE::CAR;
                     }
                 }
@@ -253,7 +260,7 @@ int main(int argc, char **argv) {
     WebSocketService ws;
 
     ws.onopen = [&view, config](const WebSocketChannelPtr& channel, const std::string& url) {
-        MESS_LOG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++New WebSocket connection(from=\"{0}\", with url=\"{1}\")",
+        MESS_LOG("New WebSocket connection(from=\"{0}\", with url=\"{1}\")",
             channel->peeraddr(), url);
         auto iter = view.add_subscriber_channel(channel);
         *channel->newContext<ViewComponent::SubscriberIter>() = iter;
@@ -287,6 +294,7 @@ int main(int argc, char **argv) {
     // WS Server
     websocket_server_t ws_server;
     ws_server.port = config.ws_url.port;
+    MESS_LOG("port={0}", ws_server.port);
     ws_server.service = &http;
     ws_server.ws = &ws;
     
