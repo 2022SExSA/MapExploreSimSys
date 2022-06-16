@@ -25,6 +25,30 @@ public:
         this->auth_token_ = auth_token;
     }
 
+    bool set_experiment_state(ES val) {
+        // set {auth-token}ExperimentState
+        auto state_key = make_key(EXPERIMENT_STATE_NAME);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "set %s %d", state_key.c_str(), (int)val);
+        return reply && reply->type != REDIS_REPLY_ERROR;
+    }
+
+    ES get_experiment_state() {
+        // get {auth-token}ExperimentState
+        auto state_key = make_key(EXPERIMENT_STATE_NAME);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "get %s", state_key.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "get {0} failed: errmsg={1}", state_key, std::string(reply->str));
+        if (reply->type == REDIS_REPLY_STRING) {
+            try {
+                auto i = std::stod(reply->str);
+                if (i > (int)ES::MIN_VAL && i < (int)ES::MAX_VAL) return (ES)i;
+            } catch (const std::exception &) {
+                return ES::INVALID;
+            }
+        }
+        MESS_LOG("Get experiment state failed", 0);
+        return ES::INVALID;
+    }
+
     std::vector<std::string> get_all_cars() {
         auto prefix = make_key(ROUTLIST_NAME_PREFIX);
         auto res = get_keys_by_prefix(make_key(ROUTLIST_NAME_PREFIX));
@@ -152,6 +176,12 @@ public:
 
     const std::string &get_auth_token() const {
         return auth_token_;
+    }
+
+    static std::unique_ptr<Board> new_instance(const std::string &auth_token, const std::string &ip, short port) {
+        std::unique_ptr<Board> res{new Board{}};
+        res->init(auth_token, ip, port);
+        return res;
     }
 
     static Board* get_instance() {

@@ -50,6 +50,12 @@ struct ExperimentConfig : public ComponentConfig {
     );
 };
 
+struct StartSimulationRequest {
+    std::string auth_token;
+
+    XPACK(O(auth_token));
+};
+
 inline messbase::Config default_trans_frontend_config_to_backend(const ExperimentConfig &frontend_config) {
     messbase::ComponentConfig comp_config;
 
