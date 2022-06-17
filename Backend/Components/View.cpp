@@ -45,6 +45,19 @@ struct RenderOrder {
         return res;
     }
 
+    bool from_json(const Json &json) {
+        if (!json.contains("op")) return false;
+        auto c = json["op"].get<std::string>();
+        if (c == "N") code = Code::NOP;
+        else if (c == "C") code = Code::CLEAR;
+        else if (c == "D") code = Code::DRAW;
+        else return false;;
+
+        if (!json.contains("args")) return false;
+        auto arr = json["args"];
+        args = arr.get<std::vector<int>>();
+    }
+
     Json to_json() const {
         Json res;
         res["op"] = CODE2STRING[(int)code];
@@ -66,6 +79,8 @@ public:
     }
 
     void run() {
+        of_.open(config_.orders_saved_path);
+        PGZXB_DEBUG_ASSERT(of_.is_open());
         run_component(config_, std::bind(msg_proc, this, std::placeholders::_1));
     }
 
@@ -95,7 +110,7 @@ private:
         }
     }
 
-    std::vector<RenderOrder> gen_rendering_orders(const std::vector<std::vector<GRID_TYPE>> &grids, bool background = true) {
+    std::vector<RenderOrder> gen_rendering_orders(std::size_t feame_cnt, const std::vector<std::vector<GRID_TYPE>> &grids, bool background = true) {
         const int h = grids.size();
         PGZXB_DEBUG_ASSERT(h > 0);
         const int w = grids.back().size();
@@ -110,12 +125,13 @@ private:
             int virtual_map_height = virtual_grid_height * h;
             RenderOrder order;
             order.code = RenderOrder::Code::DRAW;
-            order.args = { // id, x, y, w, h, theta
+            order.args = { // id, x, y, w, h, theta, freame_cnt
                 config_.backrgound_img.id,
                 0, 0,
                 virtual_map_width,
                 virtual_map_height,
-                270 * D2I_FACTOR
+                270 * D2I_FACTOR,
+                (int)feame_cnt
             };
             orders.push_back(order);
         }
@@ -124,13 +140,14 @@ private:
             for (int c = 0; c < w; ++c) {
                 RenderOrder order;
                 order.code = RenderOrder::Code::DRAW;
-                order.args = { // id, x, y, w, h, theta
+                order.args = { // id, x, y, w, h, theta, freame_cnt
                     -1,
                     c * virtual_grid_width + 1,
                     r * virtual_grid_height + 1,
                     virtual_grid_width - 2,
                     virtual_grid_height - 2,
-                    270 * D2I_FACTOR
+                    270 * D2I_FACTOR,
+                    (int)feame_cnt
                 };
 
                 switch (grids[r][c]) {
@@ -168,6 +185,11 @@ private:
         if (op.value().auth_token != Board::get_instance()->get_auth_token()) {
             MESS_LOG("Auth Failed", 1);
             return "";
+        }
+
+        if (op->op == "exit") {
+            view->of_.flush();
+            exit(0);
         }
 
         if (op.value().op == "update") {
@@ -232,10 +254,14 @@ private:
             }
 
             // Gen rendering-orders & Send orders to channels
-            auto orders = view->gen_rendering_orders(grids, true);
-            auto future_route_orders = view->gen_rendering_orders(future_route_grids, false);
+            auto orders = view->gen_rendering_orders(op->frame_cnt, grids, true);
+            auto future_route_orders = view->gen_rendering_orders(op->frame_cnt, future_route_grids, false);
             for (auto &e : future_route_orders) orders.push_back(std::move(e));
             view->display(orders);
+
+            for (const auto &e : orders) {
+                view->of_ << e.to_json().dump() << "\n";
+            }
 
             // Debug
             std::map<int, int> counter;
@@ -252,6 +278,7 @@ private:
 
     ViewComponentConfig config_;
     std::list<WebSocketChannelPtr> subscriber_channels_;
+    std::ofstream of_;
 };
 
 void *mess_view_ctx = nullptr;

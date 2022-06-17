@@ -29,6 +29,10 @@ private:
             return "";
         }
 
+        if (op->op == "exit") {
+            exit(0);
+        }
+
         if (op.value().op == "go-next" && !(op.value() == car->last_op_)) {
             auto *board = Board::get_instance();
             auto pos = board->get_next_routing_position(car->config_.mq_name);

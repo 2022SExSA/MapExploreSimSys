@@ -49,3 +49,6 @@ Build
 *.pro.user*
 build-*
 *.log
+*.mess_show
+*.mess_config
+*.sqlite3

@@ -114,6 +114,8 @@ inline messbase::Config default_trans_frontend_config_to_backend(const Experimen
     view_config.future_route_img  = {5, "future_route_grid.png"};
     view_config.car_img           = {4, "car.gif"};
     view_config.ws_url = {"", get_available_port()};
+    view_config.orders_saved_path = "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Assets/";
+    view_config.orders_saved_path.append(view_config.auth_token).append(".mess_show");
     result.view_config = view_config;
 
     return result;

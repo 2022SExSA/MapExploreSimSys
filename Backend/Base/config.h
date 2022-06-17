@@ -70,6 +70,9 @@ struct ViewComponentConfig : public ComponentConfig {
     // WebSocket Server Url
     WebSocketUrl ws_url;
 
+    // Record
+    std::string orders_saved_path;
+
     XPACK(
         I(ComponentConfig), 
         O(
@@ -79,7 +82,8 @@ struct ViewComponentConfig : public ComponentConfig {
             block_grid_img,
             car_img,
             future_route_img,
-            ws_url
+            ws_url,
+            orders_saved_path
         )
     );
 };

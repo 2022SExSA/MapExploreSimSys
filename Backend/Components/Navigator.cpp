@@ -33,6 +33,10 @@ private:
             return "";
         }
 
+        if (op->op == "exit") {
+            exit(0);
+        }
+
         if (op->op == "navi") { // navi <car1-id> <car2-id> ...
             auto *board = Board::get_instance();
             for (const auto &car_id : op->args) {

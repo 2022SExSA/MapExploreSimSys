@@ -16,3 +16,9 @@
 [submodule "Frontend/External/xpack/xpack"]
 	path = Frontend/External/xpack/xpack
 	url = https://github.com/xyz347/xpack.git
+[submodule "Backend/External/jwt-cpp"]
+	path = Backend/External/jwt-cpp
+	url = https://github.com/Thalhammer/jwt-cpp.git
+[submodule "Backend/External/SQLiteCpp"]
+	path = Backend/External/SQLiteCpp
+	url = https://github.com/SRombauts/SQLiteCpp.git

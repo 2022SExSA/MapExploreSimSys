@@ -137,12 +137,13 @@ private:
 };
 
 struct Op {
+    std::size_t frame_cnt{0};
     std::string auth_token;
     std::string op;
     std::vector<std::string> args;
 
     std::string to_string() const {
-        std::string result = auth_token;
+        std::string result = std::to_string(frame_cnt) + " " + auth_token;
         result += " ";
         result += op;
         for (const auto &arg : args) {
@@ -161,6 +162,7 @@ struct Op {
     static std::optional<Op> from_string(const std::string &str) { // tk op arg0 arg1 ...
         std::istringstream iss(str);
         Op op;
+        if (!(iss >> op.frame_cnt)) return std::nullopt;
         if (!(iss >> op.auth_token)) return std::nullopt;
         if (!(iss >> op.op)) return std::nullopt;
         

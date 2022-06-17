@@ -1,6 +1,8 @@
+#include <fstream>
 #include <thread>
 
 #include "config.h"
+#include "pg/pgfwd.h"
 #include "utils.h"
 #include "Board.h"
 #include "Xpack/json.h"
@@ -60,6 +62,21 @@ public:
             const auto start = std::chrono::steady_clock::now();
             ///////////////////////////////////////////////////////
             //|________________Update Frame_____________________|//
+            if (Board::get_instance()->get_experiment_state() == ES::EXIT) {
+                Op exit_op;
+                exit_op.op = freme_cnt;
+                exit_op.auth_token = config_.auth_token;
+                exit_op.op = "exit";
+                auto exit_op_str = exit_op.to_string();
+                view_component.input(exit_op_str);
+                for (auto &car : car_components) {
+                    car.input(exit_op_str);
+                }
+                for (auto &navi : navi_components) {
+                    navi.input(exit_op_str);
+                }
+                exit(0);
+            }
 
             if (Board::get_instance()->get_experiment_state() == ES::RUNNING) {
                 auto &board = *Board::get_instance();
@@ -87,6 +104,7 @@ public:
                 }
                 for (int i = 0; i < navi_count; ++i) {
                     if (command_for_navigators[i].args.empty()) break;
+                    command_for_navigators[i].op = freme_cnt;
                     command_for_navigators[i].op = "navi";
                     command_for_navigators[i].auth_token = config_.auth_token;
                     navi_components[i].input(command_for_navigators[i].to_string());
@@ -94,9 +112,10 @@ public:
 
                 // For each car: update car ({auth_token} go-next)
                 Op car_go_next_commmand;
+                car_go_next_commmand.frame_cnt = freme_cnt;
                 car_go_next_commmand.auth_token = config_.auth_token;
                 car_go_next_commmand.op = "go-next";
-                car_go_next_commmand.args.push_back(std::to_string(freme_cnt++));
+                car_go_next_commmand.args.push_back(std::to_string(freme_cnt));
                 for (auto &car : car_components) {
                     car.input(car_go_next_commmand.to_string());
                 }
@@ -104,6 +123,7 @@ public:
             
             // Update View
             Op update_view_op;
+            update_view_op.frame_cnt = freme_cnt;
             update_view_op.auth_token = config_.auth_token;
             update_view_op.op = "update";
             view_component.input(update_view_op.to_string());
@@ -116,6 +136,7 @@ public:
             if (true_delay < need_delay) {
                 std::this_thread::sleep_for(need_delay - true_delay);
             }
+            ++freme_cnt;
         }
     }
 private:
@@ -142,7 +163,6 @@ int main(int argc, char **argv) {
 
     // Create Controller & Run
     Controller(config).run();
-
     // Wait all children
     wait(nullptr);
     return 0;
