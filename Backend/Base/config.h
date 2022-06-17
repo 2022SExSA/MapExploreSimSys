@@ -65,9 +65,13 @@ struct ViewComponentConfig : public ComponentConfig {
     Resource nonblock_grid_img;
     Resource block_grid_img;
     Resource car_img;
+    Resource future_route_img;
 
     // WebSocket Server Url
     WebSocketUrl ws_url;
+
+    // Record
+    std::string orders_saved_path;
 
     XPACK(
         I(ComponentConfig), 
@@ -77,7 +81,9 @@ struct ViewComponentConfig : public ComponentConfig {
             nonblock_grid_img,
             block_grid_img,
             car_img,
-            ws_url
+            future_route_img,
+            ws_url,
+            orders_saved_path
         )
     );
 };

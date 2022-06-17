@@ -34,7 +34,7 @@ MESSNP_MapInfoGetter *create_default_map_info_getter() {
     map_ctx.board = Board::get_instance();
     map_info_getter.ctx = (void*)&map_ctx;
     map_info_getter.get_width = get_width;
-    map_info_getter.get_width = get_height;
+    map_info_getter.get_height = get_height;
     map_info_getter.get_grid_of_map = get_grid_of_map;
     map_info_getter.get_grid_of_map_block = get_grid_of_map_block;
     

@@ -42,6 +42,17 @@ extern const char *mess_log_module_name;
 
 using Json = nlohmann::json;
 
+enum class ExperimentState {
+    MIN_VAL,
+    INVALID,
+    INIT,
+    RUNNING,
+    PAUSE,
+    EXIT,
+    MAX_VAL
+};
+using ES = ExperimentState;
+
 constexpr char ROUTLIST_NAME_PREFIX[] = "CarRoutList@";
 constexpr char CAR_POSITION_NAME_PREFIX[] = "CarPosition@";
 
@@ -50,6 +61,8 @@ constexpr char CAR_POSITION_NAME_FORMAT[] = "CarPosition@{0}"; // CarPosition@@C
 constexpr char MAP_NAME[]                 = "Map";            // Map
 constexpr char MAP_BLOCK_NAME[]           = "MapBlock";       // MapBlock
 constexpr char MAP_SIZE_NAME[]            = "MapSize";        // MapSize
+
+constexpr char EXPERIMENT_STATE_NAME[]    = "ExperState";
 
 constexpr int MAP_GRID_COVERED_FLAG = 1;
 constexpr int MAP_GRID_RAW_FLAG = 0;

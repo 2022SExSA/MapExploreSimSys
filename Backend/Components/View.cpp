@@ -1,5 +1,6 @@
 #include "Xpack/json.h"
 #include "config.h"
+#include "fwd.h"
 #include "run_component.h"
 #include "Board.h"
 
@@ -10,6 +11,9 @@
 #include <map>
 #include <list>
 
+#define MESS_WITH_LOG
+MESS_LOG_MODULE("View");
+
 using namespace pg::messbase;
 
 enum class GRID_TYPE {
@@ -18,6 +22,7 @@ enum class GRID_TYPE {
     NONBLOCK = NONE,
     BLOCK = 2,
     CAR = 3,
+    FUTURE_ROUTE = 4,
 };
 
 struct RenderOrder {
@@ -38,6 +43,19 @@ struct RenderOrder {
             res.append(" ").append(std::to_string(arg));
         }
         return res;
+    }
+
+    bool from_json(const Json &json) {
+        if (!json.contains("op")) return false;
+        auto c = json["op"].get<std::string>();
+        if (c == "N") code = Code::NOP;
+        else if (c == "C") code = Code::CLEAR;
+        else if (c == "D") code = Code::DRAW;
+        else return false;;
+
+        if (!json.contains("args")) return false;
+        auto arr = json["args"];
+        args = arr.get<std::vector<int>>();
     }
 
     Json to_json() const {
@@ -61,6 +79,8 @@ public:
     }
 
     void run() {
+        of_.open(config_.orders_saved_path);
+        PGZXB_DEBUG_ASSERT(of_.is_open());
         run_component(config_, std::bind(msg_proc, this, std::placeholders::_1));
     }
 
@@ -90,7 +110,7 @@ private:
         }
     }
 
-    std::vector<RenderOrder> gen_rendering_orders(const std::vector<std::vector<GRID_TYPE>> &grids) {
+    std::vector<RenderOrder> gen_rendering_orders(std::size_t feame_cnt, const std::vector<std::vector<GRID_TYPE>> &grids, bool background = true) {
         const int h = grids.size();
         PGZXB_DEBUG_ASSERT(h > 0);
         const int w = grids.back().size();
@@ -100,17 +120,18 @@ private:
         std::vector<RenderOrder> orders;
 
         // 0 level: background
-        {
+        if (background) {
             int virtual_map_width = virtual_grid_width * w;
             int virtual_map_height = virtual_grid_height * h;
             RenderOrder order;
             order.code = RenderOrder::Code::DRAW;
-            order.args = { // id, x, y, w, h, theta
+            order.args = { // id, x, y, w, h, theta, freame_cnt
                 config_.backrgound_img.id,
                 0, 0,
                 virtual_map_width,
                 virtual_map_height,
-                270 * D2I_FACTOR
+                270 * D2I_FACTOR,
+                (int)feame_cnt
             };
             orders.push_back(order);
         }
@@ -119,13 +140,14 @@ private:
             for (int c = 0; c < w; ++c) {
                 RenderOrder order;
                 order.code = RenderOrder::Code::DRAW;
-                order.args = { // id, x, y, w, h, theta
+                order.args = { // id, x, y, w, h, theta, freame_cnt
                     -1,
                     c * virtual_grid_width + 1,
                     r * virtual_grid_height + 1,
                     virtual_grid_width - 2,
                     virtual_grid_height - 2,
-                    270 * D2I_FACTOR
+                    270 * D2I_FACTOR,
+                    (int)feame_cnt
                 };
 
                 switch (grids[r][c]) {
@@ -141,10 +163,13 @@ private:
                 case GRID_TYPE::CAR :
                     order.args[0] = config_.car_img.id;
                     break;
+                case GRID_TYPE::FUTURE_ROUTE : 
+                    order.args[0] = config_.future_route_img.id;
+                    break;
                 default: break;
                 }
 
-                orders.push_back(order);
+                if (order.args[0] != -1) orders.push_back(order);
             }
         }
         return orders;
@@ -160,6 +185,11 @@ private:
         if (op.value().auth_token != Board::get_instance()->get_auth_token()) {
             MESS_LOG("Auth Failed", 1);
             return "";
+        }
+
+        if (op->op == "exit") {
+            view->of_.flush();
+            exit(0);
         }
 
         if (op.value().op == "update") {
@@ -199,14 +229,39 @@ private:
                     auto pos_opt = board.get_current_position_of_car(id);
                     if (pos_opt.has_value()) {
                         const auto &pos = pos_opt.value();
+                        if (pos.x < 0 || pos.x >= w || pos.y < 0 || pos.y >= h) {
+                            MESS_LOG("car={0} out of bound(w={1}, h={2})", id, w, h);
+                            continue;
+                        }
                         grids[pos.y][pos.x] = GRID_TYPE::CAR;
                     }
                 }
             }
 
+            std::vector<std::vector<GRID_TYPE>> future_route_grids(h, std::vector<GRID_TYPE>(w, GRID_TYPE::NONE));
+            {
+                auto car_ids = board.get_all_cars();
+                for (const auto &id : car_ids) {
+                    auto pos_list = board.get_all_pos_of_routlist(id);
+                    for (const auto &e : pos_list) {
+                        if (e.x < 0 || e.x >= w || e.y < 0 || e.y >= h) {
+                            MESS_LOG("Routlist of car={0} out of bound(w={1}, h={2})", id, w, h);
+                            continue;
+                        }
+                        future_route_grids[e.y][e.x] = GRID_TYPE::FUTURE_ROUTE;
+                    }
+                }
+            }
+
             // Gen rendering-orders & Send orders to channels
-            auto orders = view->gen_rendering_orders(grids);
+            auto orders = view->gen_rendering_orders(op->frame_cnt, grids, true);
+            auto future_route_orders = view->gen_rendering_orders(op->frame_cnt, future_route_grids, false);
+            for (auto &e : future_route_orders) orders.push_back(std::move(e));
             view->display(orders);
+
+            for (const auto &e : orders) {
+                view->of_ << e.to_json().dump() << "\n";
+            }
 
             // Debug
             std::map<int, int> counter;
@@ -223,6 +278,7 @@ private:
 
     ViewComponentConfig config_;
     std::list<WebSocketChannelPtr> subscriber_channels_;
+    std::ofstream of_;
 };
 
 void *mess_view_ctx = nullptr;
@@ -253,7 +309,7 @@ int main(int argc, char **argv) {
     WebSocketService ws;
 
     ws.onopen = [&view, config](const WebSocketChannelPtr& channel, const std::string& url) {
-        MESS_LOG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++New WebSocket connection(from=\"{0}\", with url=\"{1}\")",
+        MESS_LOG("New WebSocket connection(from=\"{0}\", with url=\"{1}\")",
             channel->peeraddr(), url);
         auto iter = view.add_subscriber_channel(channel);
         *channel->newContext<ViewComponent::SubscriberIter>() = iter;
@@ -263,7 +319,8 @@ int main(int argc, char **argv) {
             config.covered_grid_img,
             config.nonblock_grid_img,
             config.block_grid_img,
-            config.car_img
+            config.car_img,
+            config.future_route_img
         };
 
         // Slow
@@ -287,6 +344,7 @@ int main(int argc, char **argv) {
     // WS Server
     websocket_server_t ws_server;
     ws_server.port = config.ws_url.port;
+    MESS_LOG("port={0}", ws_server.port);
     ws_server.service = &http;
     ws_server.ws = &ws;
     
@@ -295,6 +353,8 @@ int main(int argc, char **argv) {
 
     websocket_server_run(&ws_server, 0);
     mess_view_ctx = &ws_server;
+
+    std::atexit(exit);
 
     // Run component
     view.run();

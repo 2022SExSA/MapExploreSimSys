@@ -41,7 +41,7 @@ typedef struct MESSNP_MapInfoGetter_v1 {
 #define MESSNP_ROUTING_FUNC_V1_NAME MESSNP_STR(MESSNP_ROUTING_FUNC_V1)
 
 typedef int(*MESSNP_NaviSelectDestPosFuncV1)(MESSNP_Position *dest_pos, const MESSNP_Position *src_pos, MESSNP_MapInfoGetter *map_info_getter);
-typedef int(*MESSNP_NaviRoutingV1)(MESSNP_PositionArray *rout_pos_array, const MESSNP_Position *src_pos, const MESSNP_Position *dest_pos);
+typedef int(*MESSNP_NaviRoutingV1)(MESSNP_PositionArray *rout_pos_array, const MESSNP_Position *src_pos, const MESSNP_Position *dest_pos, MESSNP_MapInfoGetter *map_info_getter);
 
 #ifdef MESSBASE_LIB
 #include "fwd.h"

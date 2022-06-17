@@ -51,3 +51,6 @@ build-MapExploreSimSys*
 *.DS_Store
 build-*
 *.log
+*.mess_show
+*.mess_config
+*.sqlite3
