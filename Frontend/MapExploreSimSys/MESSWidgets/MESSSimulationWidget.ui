@@ -19,7 +19,7 @@
    </item>
    <item>
     <widget class="QWidget" name="widgetConfigGroup" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="11,1">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="11,0">
       <item>
        <widget class="ExperimentConfigWidget" name="widgetConfig" native="true"/>
       </item>
@@ -37,6 +37,13 @@
           <widget class="QPushButton" name="pushButtonPause">
            <property name="text">
             <string>开始</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButtonStop">
+           <property name="text">
+            <string>结束</string>
            </property>
           </widget>
          </item>

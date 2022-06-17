@@ -7,7 +7,7 @@
 #include <QDebug>
 
 BaseDisplayWidget::BaseDisplayWidget(QWidget *parent) : QWidget(parent) {
-
+    setAttribute(Qt::WA_TransparentForMouseEvents, true);
 }
 
 void BaseDisplayWidget::paintEvent(QPaintEvent *) {
@@ -17,7 +17,7 @@ void BaseDisplayWidget::paintEvent(QPaintEvent *) {
         const auto &[op, args] = order;
         if (op == RenderOrder::Code::CLEAR) (void(0));
         else if (op == RenderOrder::Code::DRAW) {
-            if (args.size() == 6) {
+            if (args.size() >= 6) {
                 int resID = args[0];
                 auto iter = img_cache_.find(resID);
                 if (iter != img_cache_.end()) {
@@ -47,6 +47,7 @@ void BaseDisplayWidget::paintEvent(QPaintEvent *) {
                     p.rotate(theta / 1000.0 + 90.0);
                     p.translate(-center_xpos, -center_ypos);
                     p.drawImage(trueArea, iter->second, iter->second.rect());
+//                    qDebug() << "Drawing";
                     p.restore();
                 } else if (resID != -1) {
                     qWarning("Resource %d not found", resID);
@@ -71,10 +72,7 @@ void BaseDisplayWidget::addResource(int id, const QImage &img) {
 
 void BaseDisplayWidget::display(const std::vector<RenderOrder> &orders) {
     rendering_orders_.insert(rendering_orders_.end(), orders.begin(), orders.end());
-//    for (const auto &e : rendering_orders_) {
-//        if (e.args[0] == 4) qDebug() << "Show Car";
-//    }
-//    qDebug() << rendering_orders_.size();
+    qDebug() << rendering_orders_.size();
     this->update(); // trigger painEvent(...)
 }
 

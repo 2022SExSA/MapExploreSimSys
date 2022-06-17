@@ -18,11 +18,7 @@ void MESSDisplayWidget::start(const QString & http_url, const QString & ws_url) 
     this->BaseDisplayWidget::reset();
     http_server_url_ = http_url;
     ws_server_url_ = ws_url;
-    if (ws_socket_ && http_mgr) {
-        ws_socket_->close();
-        ws_socket_->deleteLater();
-        http_mgr->deleteLater();
-    }
+    try_stop();
     ws_socket_ = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     http_mgr = new QNetworkAccessManager(this);
     ws_socket_->open(ws_server_url_);
@@ -35,6 +31,19 @@ void MESSDisplayWidget::start(const QString & http_url, const QString & ws_url) 
         qDebug() << "Connnected";
         connect(ws_socket_, &QWebSocket::textMessageReceived, this, &MESSDisplayWidget::wsOnMessage);
     });
+}
+
+void MESSDisplayWidget::try_stop() {
+    if (ws_socket_) {
+        ws_socket_->close();
+        ws_socket_->deleteLater();
+        http_mgr->deleteLater();
+        ws_socket_ = nullptr;
+    }
+    if (http_mgr) {
+        http_mgr->deleteLater();
+        http_mgr = nullptr;
+    }
 }
 
 void MESSDisplayWidget::paintEvent(QPaintEvent * event) {

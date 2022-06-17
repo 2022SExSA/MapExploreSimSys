@@ -16,6 +16,7 @@ public:
 
     void start(const QString &http_url,
                const QString &ws_url);
+    void try_stop();
 
     void paintEvent(QPaintEvent *event) override;
 public slots:

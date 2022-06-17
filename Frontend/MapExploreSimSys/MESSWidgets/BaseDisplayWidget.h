@@ -5,21 +5,7 @@
 #include <unordered_map>
 
 #include "dll_export.h"
-
-struct RenderOrder {
-    enum class Code : int {
-        NOP, CLEAR, DRAW,
-    };
-
-    static constexpr const char *CODE2STRING[] = {
-            "N", "C", "D", // nop, clear, draw
-    };
-
-    Code code{Code::NOP};
-    std::vector<int> args;
-
-    void fromJson(const QJsonValue &json);
-};
+#include "RenderOrder.h"
 
 class MESSWIDGETS_EXPORT BaseDisplayWidget : public QWidget {
     Q_OBJECT

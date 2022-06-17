@@ -22,20 +22,26 @@ SOURCES += \
     BaseDisplayWidget.cpp \
     #StatisticsWidget.cpp \
     ExperimentConfigWidget.cpp \
+    ExperimentDemandWidget.cpp \
     MESSDisplayWidget.cpp \
     MESSSimulationWidget.cpp \
     ObjectEditWidget.cpp \
     ObjectEntryEditWidget.cpp \
+    $$PWD/../../External/QJsonModel/qjsonmodel.cpp \
     utils.cpp
 
 HEADERS += \
     BaseDisplayWidget.h \
     ExperimentConfigWidget.h \
+    ExperimentDemandWidget.h \
+    JsonModel.h \
     MESSDisplayWidget.h \
     #StatisticsWidget.h \
     MESSSimulationWidget.h \
     ObjectEditWidget.h \
     ObjectEntryEditWidget.h \
+    $$PWD/../../External/QJsonModel/qjsonmodel.h \
+    RenderOrder.h \
     config.h \
     dll_export.h \
     utils.h
@@ -47,8 +53,10 @@ unix {
 !isEmpty(target.path): INSTALLS += target
 
 FORMS += \
+    ExperimentDemandWidget.ui \
     StatisticsWidget.ui \
     ExperimentConfigWidget.ui \
     MESSSimulationWidget.ui
 
 INCLUDEPATH += $$PWD/../../External/xpack/
+INCLUDEPATH += $$PWD/../../External/QJsonModel/

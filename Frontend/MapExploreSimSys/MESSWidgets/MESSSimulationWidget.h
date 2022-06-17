@@ -20,6 +20,7 @@ public:
 private slots:
     void on_pushButtonStart_clicked();
     void on_pushButtonPause_clicked();
+    void on_pushButtonStop_clicked();
 
 private:
     Ui::MESSSimulationWidget *ui;
