@@ -10,15 +10,22 @@
 #include <QAbstractSocket>
 
 MESSDisplayWidget::MESSDisplayWidget(
-        const QString &http_url,
-        const QString &ws_url,
         QWidget *parent)
-    : BaseDisplayWidget(parent),
-      http_server_url_(http_url),
-      ws_server_url_(ws_url) {
+    : BaseDisplayWidget(parent) {
+}
+
+void MESSDisplayWidget::start(const QString & http_url, const QString & ws_url) {
+    this->BaseDisplayWidget::reset();
+    http_server_url_ = http_url;
+    ws_server_url_ = ws_url;
+    try_stop();
     ws_socket_ = new QWebSocket(QString(), QWebSocketProtocol::VersionLatest, this);
     http_mgr = new QNetworkAccessManager(this);
     ws_socket_->open(ws_server_url_);
+
+    connect(ws_socket_, (void(QWebSocket::*)(QAbstractSocket::SocketError))&QWebSocket::error, [this](QAbstractSocket::SocketError) {
+        QMessageBox::warning(this, "错误", QString("连接View组件错误: %1").arg(ws_socket_->errorString()));
+    });
 
     connect(ws_socket_, &QWebSocket::connected, [this]() {
         qDebug() << "Connnected";
@@ -26,12 +33,24 @@ MESSDisplayWidget::MESSDisplayWidget(
     });
 }
 
+void MESSDisplayWidget::try_stop() {
+    if (ws_socket_) {
+        ws_socket_->close();
+        ws_socket_->deleteLater();
+        http_mgr->deleteLater();
+        ws_socket_ = nullptr;
+    }
+    if (http_mgr) {
+        http_mgr->deleteLater();
+        http_mgr = nullptr;
+    }
+}
+
 void MESSDisplayWidget::paintEvent(QPaintEvent * event) {
     BaseDisplayWidget::paintEvent(event);
 }
 
 void MESSDisplayWidget::wsOnMessage(const QString & msg) {
-    qDebug() << msg;
     auto jsonDoc = QJsonDocument::fromJson(msg.toUtf8());
     auto respData = jsonDoc.object();
 

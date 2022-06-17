@@ -16,9 +16,11 @@ public:
     explicit ObjectEditWidget(QWidget *parent = nullptr);
     void init(std::shared_ptr<ObjectEditConfig> config, std::size_t msgBufSize = kDefaultInfoBufSize);
 
+    void setData(const ObjectData &data);
     ObjectData getData();
 signals:
     void confirmData(ObjectData data);
+    void addData(ObjectData data);
 private:
     std::shared_ptr<ObjectEditConfig> m_config{nullptr};
     CircularVector<QString> m_infoBuf{kDefaultInfoBufSize};

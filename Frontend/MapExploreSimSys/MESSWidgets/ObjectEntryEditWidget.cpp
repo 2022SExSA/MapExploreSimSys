@@ -33,3 +33,7 @@ std::tuple<QVariant, const char*> ObjectEntryEditWidget::getValue() {
     return std::make_tuple(val, nullptr);
 }
 
+QWidget * ObjectEntryEditWidget::getEditWidget() {
+    return m_editWdiget;
+}
+

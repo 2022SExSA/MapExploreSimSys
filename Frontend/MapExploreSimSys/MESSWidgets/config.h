@@ -19,7 +19,7 @@ struct CarComponentConfig : public ComponentConfig {
 struct NaviComponentConfig : public ComponentConfig {
     std::string plugin_id;
 
-    XPACK(I(ComponentConfig), O(plugin_path));
+    XPACK(I(ComponentConfig), O(plugin_id));
 };
 
 struct MapInitConfig {

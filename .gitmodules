@@ -22,3 +22,6 @@
 [submodule "Backend/External/SQLiteCpp"]
 	path = Backend/External/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "Frontend/External/QJsonModel"]
+	path = Frontend/External/QJsonModel
+	url = https://github.com/dridk/QJsonModel.git

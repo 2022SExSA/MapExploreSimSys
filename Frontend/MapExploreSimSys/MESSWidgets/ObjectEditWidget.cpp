@@ -35,13 +35,16 @@ void ObjectEditWidget::init(std::shared_ptr<ObjectEditConfig> config, std::size_
         auto *entryWidget = new ObjectEntryEditWidget(this);
         entryWidget->init(&cfg);
         layout->addWidget(entryWidget);
+        cfg.entryWidget = entryWidget;
         Q_ASSERT(cfg.entryWidget);
     }
 
     auto *buttonBox = new QDialogButtonBox(Qt::Horizontal);
-    auto *okBtn = buttonBox->addButton(QDialogButtonBox::Ok);
-    // auto *cancelBtn = buttonBox->addButton(QDialogButtonBox::Cancel);
-    connect(okBtn, &QPushButton::clicked, [this]() {
+    auto *saveBtn = new QPushButton("保存");
+    buttonBox->addButton(saveBtn, QDialogButtonBox::NoRole);
+    auto *addBtn = new QPushButton("添加");
+    buttonBox->addButton(addBtn, QDialogButtonBox::NoRole);
+    connect(saveBtn, &QPushButton::clicked, [this]() {
         //for (auto &cfg : *this->m_config) {
         //    const auto [val, errMsg] = cfg.entryWidget->getValue();
         //    if (errMsg) qDebug("%s: [Error]%s", cfg.label.toStdString().c_str(), errMsg);
@@ -49,12 +52,23 @@ void ObjectEditWidget::init(std::shared_ptr<ObjectEditConfig> config, std::size_
         //}
         emit confirmData(getData());
     });
-    // connect(cancelBtn, &QPushButton::clicked, [this]() { this->close(); });
+    connect(addBtn, &QPushButton::clicked, [this]() { emit addData(getData()); });
 
     layout->addWidget(buttonBox);
     layout->addWidget(msgLabel);
     this->setLayout(layout);
     this->m_config = config;
+}
+
+void ObjectEditWidget::setData(const ObjectData & data) {
+    for (auto iter = data.begin(); iter != data.end(); ++iter) {
+        const auto &k = iter.key();
+        const auto &v = iter.value();
+        qDebug() << __LINE__;
+        (*m_config)[k].entryWidget->getEditWidget();
+        qDebug() << __LINE__;
+        (*m_config)[k].setValueCallback((*m_config)[k].entryWidget->getEditWidget(), v);
+    }
 }
 
 ObjectData ObjectEditWidget::getData() {
