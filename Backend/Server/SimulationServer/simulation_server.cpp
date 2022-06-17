@@ -173,6 +173,9 @@ int main() {
         // Save data
         db->add_experiment(e);
         ctx->sendJson(make_response_json_data(0, "保存成功", Json::object()));
+        // Save -> Remove from server
+        mess_ctx.experiments.erase(requset.auth_token);
+        return HTTP_STATUS_OK;
     });
 
     // Mgr level
