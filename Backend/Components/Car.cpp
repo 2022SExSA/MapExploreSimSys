@@ -29,16 +29,19 @@ private:
             return "";
         }
 
-        if (op.value().op == "go-next") {
+        if (op->op == "exit") {
+            exit(0);
+        }
+
+        if (op.value().op == "go-next" && !(op.value() == car->last_op_)) {
             auto *board = Board::get_instance();
             auto pos = board->get_next_routing_position(car->config_.mq_name);
             if (pos.has_value()) {
                 int x = pos.value().x;
                 int y = pos.value().y;
-                MESS_LOG("Update Car@{0} to ({1}, {2})", car->config_.mq_name, x, y);
-
+                if (x < 0 || y < 0) return "";
                 // Update pos of this car
-                auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
+                [[maybe_unused]] auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
                 MESS_ERR_IF(!ok, "Car {0} move to failed", car->config_.mq_name);
                 
                 // Light grid on map
@@ -51,12 +54,14 @@ private:
                         board->set_grid_of_map(r, c, MAP_GRID_RAW_FLAG);
                     }
                 }
+                car->last_op_ = op.value();
             }
         }
         return "";
     }
 
     CarComponentConfig config_;
+    Op last_op_;
 };
 
 int main(int argc, char **argv) {

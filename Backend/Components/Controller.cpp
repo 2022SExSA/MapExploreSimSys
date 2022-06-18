@@ -1,6 +1,8 @@
+#include <fstream>
 #include <thread>
 
 #include "config.h"
+#include "pg/pgfwd.h"
 #include "utils.h"
 #include "Board.h"
 #include "Xpack/json.h"
@@ -18,6 +20,7 @@ public:
     Controller(const Config &config) : config_(config) {
         const auto &map = config_.map_config;
         auto &board = *Board::get_instance();
+        board.set_experiment_state(ES::INIT);
         board.set_map_size(config_.map_config.size.width, config.map_config.size.height);
         const auto [w, h] = map.size;
         for (int r = 0; r < h; ++r) {
@@ -30,68 +33,97 @@ public:
         PGZXB_DEBUG_ASSERT(config_.navigator_components_config.size() > 0);
 
         launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/View", xpack::json::encode(config_.view_config));
-        view_component = C2Call{config_.view_config};
 
         for (const auto &car_config : config_.car_components_config) {
             // FIXME: Bad smell: hardcode
             launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Car", xpack::json::encode(car_config));
-            car_components.push_back(C2Call{car_config});
         }
         for (const auto &navi_config : config_.navigator_components_config) {
             // FIXME: Bad smell: hardcode
             launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Navigator", xpack::json::encode(navi_config));
-            navi_components.push_back(C2Call{navi_config});
         }
+
+        // Better
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(200ms);
+
+        view_component = C2Call{config_.view_config};
+        for (const auto &car_config : config_.car_components_config) {
+            car_components.push_back(C2Call{car_config});
+        }
+        for (const auto &navi_config : config_.navigator_components_config) {
+            navi_components.push_back(C2Call{navi_config});
+        }     
     }
 
     void run() {
-        int i = 0;
+        std::size_t freme_cnt = 0;
         while (true) {
-            std::cerr << "RUNNING" << i++ << "\n";
             const auto start = std::chrono::steady_clock::now();
             ///////////////////////////////////////////////////////
             //|________________Update Frame_____________________|//
-
-            auto &board = *Board::get_instance();
-
-            // Scan all cars rout-list & Collect car-ids whose rout-list is empty
-            std::vector<std::string> car_ids;
-            for (const auto &car : config_.car_components_config) {
-                auto cnt = board.get_routlist_size(car.mq_name);
-                if (cnt <= 0) {
-                    car_ids.push_back(car.mq_name);
+            if (Board::get_instance()->get_experiment_state() == ES::EXIT) {
+                Op exit_op;
+                exit_op.op = freme_cnt;
+                exit_op.auth_token = config_.auth_token;
+                exit_op.op = "exit";
+                auto exit_op_str = exit_op.to_string();
+                view_component.input(exit_op_str);
+                for (auto &car : car_components) {
+                    car.input(exit_op_str);
                 }
+                for (auto &navi : navi_components) {
+                    navi.input(exit_op_str);
+                }
+                exit(0);
             }
 
-            // Call navi ({auth_token} navi car1-id car2-id ...)
-            const int car_count = (int)car_ids.size();
-            const int navi_count = (int)navi_components.size();
-            std::vector<Op> command_for_navigators(navi_count);
-            for (
-                int car_idx = 0, navi_idx = 0;
-                car_idx < car_count && navi_idx < navi_count;
-                ++car_idx, navi_idx = (navi_idx + 1) % navi_count
-            ) {
-                PGZXB_DEBUG_ASSERT(navi_count != 0);
-                command_for_navigators[navi_idx].args.push_back(car_ids[car_idx]);
-            }
-            for (int i = 0; i < navi_count; ++i) {
-                if (command_for_navigators[i].args.empty()) break;
-                command_for_navigators[i].op = "navi";
-                command_for_navigators[i].auth_token = config_.auth_token;
-                navi_components[i].input(command_for_navigators[i].to_string());
-            }            
+            if (Board::get_instance()->get_experiment_state() == ES::RUNNING) {
+                auto &board = *Board::get_instance();
 
-            // For each car: update car ({auth_token} go-next)
-            Op car_go_next_commmand;
-            car_go_next_commmand.auth_token = config_.auth_token;
-            car_go_next_commmand.op = "go-next";
-            for (auto &car : car_components) {
-                car.input(car_go_next_commmand.to_string());
+                // Scan all cars rout-list & Collect car-ids whose rout-list is empty
+                std::vector<std::string> car_ids;
+                for (const auto &car : config_.car_components_config) {
+                    auto cnt = board.get_routlist_size(car.mq_name);
+                    if (cnt <= 0) {
+                        car_ids.push_back(car.mq_name);
+                    }
+                }
+
+                // Call navi ({auth_token} navi car1-id car2-id ...)
+                const int car_count = (int)car_ids.size();
+                const int navi_count = (int)navi_components.size();
+                std::vector<Op> command_for_navigators(navi_count);
+                for (
+                    int car_idx = 0, navi_idx = 0;
+                    car_idx < car_count && navi_idx < navi_count;
+                    ++car_idx, navi_idx = (navi_idx + 1) % navi_count
+                ) {
+                    PGZXB_DEBUG_ASSERT(navi_count != 0);
+                    command_for_navigators[navi_idx].args.push_back(car_ids[car_idx]);
+                }
+                for (int i = 0; i < navi_count; ++i) {
+                    if (command_for_navigators[i].args.empty()) break;
+                    command_for_navigators[i].op = freme_cnt;
+                    command_for_navigators[i].op = "navi";
+                    command_for_navigators[i].auth_token = config_.auth_token;
+                    navi_components[i].input(command_for_navigators[i].to_string());
+                }
+
+                // For each car: update car ({auth_token} go-next)
+                Op car_go_next_commmand;
+                car_go_next_commmand.frame_cnt = freme_cnt;
+                car_go_next_commmand.auth_token = config_.auth_token;
+                car_go_next_commmand.op = "go-next";
+                car_go_next_commmand.args.push_back(std::to_string(freme_cnt));
+                for (auto &car : car_components) {
+                    car.input(car_go_next_commmand.to_string());
+                }
             }
             
             // Update View
             Op update_view_op;
+            update_view_op.frame_cnt = freme_cnt;
             update_view_op.auth_token = config_.auth_token;
             update_view_op.op = "update";
             view_component.input(update_view_op.to_string());
@@ -104,6 +136,7 @@ public:
             if (true_delay < need_delay) {
                 std::this_thread::sleep_for(need_delay - true_delay);
             }
+            ++freme_cnt;
         }
     }
 private:
@@ -130,7 +163,6 @@ int main(int argc, char **argv) {
 
     // Create Controller & Run
     Controller(config).run();
-
     // Wait all children
     wait(nullptr);
     return 0;

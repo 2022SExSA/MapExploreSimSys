@@ -70,6 +70,7 @@ PGTEST_CASE(gen_config_json) {
     view_config.covered_grid_img  = {1, "covered_grid.png"};
     view_config.nonblock_grid_img = {2, "nonblock_grid.jpg"};
     view_config.block_grid_img    = {3, "block_grid.gif"};
+    view_config.future_route_img  = {5, "future_route_grid.png"};
     view_config.car_img           = {4, "car.gif"};
     view_config.ws_url = {"", 9876};
     config.view_config = view_config;

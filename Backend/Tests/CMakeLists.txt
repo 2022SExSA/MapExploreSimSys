@@ -2,7 +2,7 @@ include_directories(../external/PGUtils)
 
 file(GLOB MESSBASE_TESTS_FILES test_*.cpp)
 add_executable(MESSBASE_test ${MESSBASE_TESTS_FILES})
-target_link_libraries(MESSBASE_test PGUtils PGTestMain)
+target_link_libraries(MESSBASE_test MESSBase PGUtils PGTestMain dl)
 
 file(GLOB MESSBASE_DEMOS_FILES demo_*.cpp)
 foreach(file ${MESSBASE_DEMOS_FILES})

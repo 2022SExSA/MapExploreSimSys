@@ -20,26 +20,37 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     BaseDisplayWidget.cpp \
-    MESSDisplayWidget.cpp \
     StatisticsConfigWidget.cpp \
-    StatisticsWidget.cpp\
+    StatisticsWidget.cpp \
     ExperimentConfigWidget.cpp \
+    ExperimentDemandWidget.cpp \
+    LoginWidget.cpp \
+    MESSDisplayWidget.cpp \
     MESSSimulationWidget.cpp \
     ObjectEditWidget.cpp \
     ObjectEntryEditWidget.cpp \
+    $$PWD/../../External/QJsonModel/qjsonmodel.cpp \
+    RegisterWidget.cpp \
+    da_utils.cpp \
     utils.cpp
 
 HEADERS += \
     BaseDisplayWidget.h \
     ExperimentConfigWidget.h \
+    ExperimentDemandWidget.h \
+    JsonModel.h \
+    LoginWidget.h \
     MESSDisplayWidget.h \
     StatisticsConfigWidget.h \
     StatisticsWidget.h \
-    dll_export.h\
     MESSSimulationWidget.h \
     ObjectEditWidget.h \
     ObjectEntryEditWidget.h \
+    $$PWD/../../External/QJsonModel/qjsonmodel.h \
+    RegisterWidget.h \
+    RenderOrder.h \
     config.h \
+    da_utils.h \
     dll_export.h \
     utils.h
 
@@ -51,8 +62,12 @@ unix {
 
 FORMS += \
     StatisticsConfigWidget.ui \
-    StatisticsWidget.ui\
+    ExperimentDemandWidget.ui \
+    LoginWidget.ui \
+    RegisterWidget.ui \
+    StatisticsWidget.ui \
     ExperimentConfigWidget.ui \
     MESSSimulationWidget.ui
 
 INCLUDEPATH += $$PWD/../../External/xpack/
+INCLUDEPATH += $$PWD/../../External/QJsonModel/

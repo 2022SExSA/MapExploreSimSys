@@ -7,11 +7,11 @@
 
 void asyncHttpGET(
         QNAM * mgr, const QString & url,
-        const std::function<void (const QString &)> & then,
-        const std::function<void(const QString &)> &err) {
+        std::function<void (const QString &)> then,
+        std::function<void(const QString &)> err) {
     QNetworkRequest resq(url);
     QNetworkReply *reply = mgr->get(resq);
-    QObject::connect(reply, &QNetworkReply::finished, [&then, &err, reply]() {
+    QObject::connect(reply, &QNetworkReply::finished, [then, err, reply]() {
         if (reply->error() != QNetworkReply::NoError) {
             err(reply->errorString());
         }
@@ -21,16 +21,27 @@ void asyncHttpGET(
 
 void asyncHttpPOST(
         QNAM *mgr, const QString & url, const QByteArray &body,
-        const std::function<void (const QString &)> & then,
-        const std::function<void(const QString &)> &err) {
+        std::function<void (const QString &)> then,
+        std::function<void(const QString &)> err) {
     QNetworkRequest resq(url);
+    qDebug() << __FILE__ << __LINE__;
+    resq.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    qDebug() << __FILE__ << __LINE__;
     QNetworkReply *reply = mgr->post(resq, body);
-    QObject::connect(reply, &QNetworkReply::finished, [&then, &err, reply]() {
+    qDebug() << __FILE__ << __LINE__;
+    QObject::connect(reply, &QNetworkReply::finished, [then, err, reply]() {
+        qDebug() << __FILE__ << __LINE__;
         if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << __FILE__ << __LINE__;
             err(reply->errorString());
+        qDebug() << __FILE__ << __LINE__;
+            return;
         }
+        qDebug() << __FILE__ << __LINE__;
         then(reply->readAll());
+        qDebug() << __FILE__ << __LINE__;
     });
+    qDebug() << __FILE__ << __LINE__;
 }
 
 RespData json2ResponseData(const std::string & str, bool *ok) {

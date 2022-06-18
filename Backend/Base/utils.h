@@ -7,6 +7,8 @@
 #include "config.h"
 #include "SimpleAmqpClient/Channel.h"
 
+#include <cstddef>
+#include <cstdio>
 #include <dlfcn.h>
 #include <sstream>
 #include <unistd.h>
@@ -135,12 +137,13 @@ private:
 };
 
 struct Op {
+    std::size_t frame_cnt{0};
     std::string auth_token;
     std::string op;
     std::vector<std::string> args;
 
     std::string to_string() const {
-        std::string result = auth_token;
+        std::string result = std::to_string(frame_cnt) + " " + auth_token;
         result += " ";
         result += op;
         for (const auto &arg : args) {
@@ -150,9 +153,16 @@ struct Op {
         return result;
     }
 
+    bool operator==(const Op &o) {
+        return auth_token == o.auth_token &&
+               op == o.op &&
+               args == o.args;
+    }
+
     static std::optional<Op> from_string(const std::string &str) { // tk op arg0 arg1 ...
         std::istringstream iss(str);
         Op op;
+        if (!(iss >> op.frame_cnt)) return std::nullopt;
         if (!(iss >> op.auth_token)) return std::nullopt;
         if (!(iss >> op.op)) return std::nullopt;
         
@@ -201,6 +211,7 @@ public:
         channel_ = AmqpClient::Channel::Open(opts);
 
         channel_->DeclareExchange(input_q);
+        channel_->DeclareQueue(input_q, false, true, false, false);
         channel_->BindQueue(input_q, input_q);
     }
 
@@ -233,6 +244,38 @@ inline Json make_response_json_data(int err_code, const Json &data) {
     resp["data"] = data;
     return resp;
 }
+
+inline Json make_response_json_data(int err_code, const std::string &msg, const Json &data) {
+    // {
+    //     "code": <code:int>,
+    //     "msg": "msg",
+    //     "data": json-object
+    // }
+    Json resp /* Json::object() */;
+    resp["code"] = err_code;
+    resp["msg"]  = msg;/* err_code_to_zhCN_str(err_code); */
+    resp["data"] = data;
+    return resp;
+}
+
+inline const char * get_navi_plugin_by_id(const std::string &id) {
+    static const char *NAME_TABLE[4][2] = {
+        {"demo", "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_demo.so"},
+        {"A*",   "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_a_star.so"},
+        {"DFS",  "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_dfs.so"},
+        {"BFS",  "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_bfs.so"},
+    };
+
+    for (const auto &e : NAME_TABLE) {
+        if (id == e[0]) {
+            return e[1];
+        }
+    }
+
+    return nullptr;
+}
+
+short get_available_port();
 
 MESSBASE_NAMESPACE_END
 #endif

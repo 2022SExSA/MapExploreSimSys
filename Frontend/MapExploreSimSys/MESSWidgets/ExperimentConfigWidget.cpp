@@ -165,11 +165,14 @@ void ExperimentConfigWidget::setData(const ExperimentConfig &data) {
 }
 
 const ExperimentConfig &ExperimentConfigWidget::getInteralData() {
-    // Set random token (time)
-    data_.auth_token = "MESSAuthToken_" + std::to_string(std::time(nullptr));
     // Get & Set FPS
     data_.fps = ui->spinBoxFPS->value();
     return data_;
+}
+
+void ExperimentConfigWidget::setAuthToken(const std::string & token) {
+    // Set random token (time)
+    data_.auth_token = token;
 }
 
 void ExperimentConfigWidget::on_pushButtonImportMap_clicked() {

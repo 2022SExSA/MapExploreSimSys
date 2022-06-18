@@ -1,8 +1,10 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    MESSDisplayWidgetDemo \
     StatisticsDmo\
-    ConfigDemo \
-    MESSSimulationDemo \
     StisticsConfigDemo
+    StatisticsDemo \
+    ConfigDemo \
+    ExperimentDemandDemo \
+    MESSDisplayWidgetDemo \
+    MESSSimulationDemo

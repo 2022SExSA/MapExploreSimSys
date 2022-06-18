@@ -25,6 +25,30 @@ public:
         this->auth_token_ = auth_token;
     }
 
+    bool set_experiment_state(ES val) {
+        // set {auth-token}ExperimentState
+        auto state_key = make_key(EXPERIMENT_STATE_NAME);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "set %s %d", state_key.c_str(), (int)val);
+        return reply && reply->type != REDIS_REPLY_ERROR;
+    }
+
+    ES get_experiment_state() {
+        // get {auth-token}ExperimentState
+        auto state_key = make_key(EXPERIMENT_STATE_NAME);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "get %s", state_key.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "get {0} failed: errmsg={1}", state_key, std::string(reply->str));
+        if (reply->type == REDIS_REPLY_STRING) {
+            try {
+                auto i = std::stod(reply->str);
+                if (i > (int)ES::MIN_VAL && i < (int)ES::MAX_VAL) return (ES)i;
+            } catch (const std::exception &) {
+                return ES::INVALID;
+            }
+        }
+        MESS_LOG("Get experiment state failed", 0);
+        return ES::INVALID;
+    }
+
     std::vector<std::string> get_all_cars() {
         auto prefix = make_key(ROUTLIST_NAME_PREFIX);
         auto res = get_keys_by_prefix(make_key(ROUTLIST_NAME_PREFIX));
@@ -50,6 +74,26 @@ public:
         }
         MESS_LOG("Get size of {0} failed", routlist_name);
         return -1;
+    }
+
+    std::vector<Point<int>> get_all_pos_of_routlist(const std::string &car_name) {
+        // lrange {auth-token}RoutList@{car-name} 0 -1
+        auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "lrange %s 0 -1", routlist_name.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "lrange {0} 0 -1 failed: errmsg={1}", routlist_name, std::string(reply->str));
+        if (reply->type == REDIS_REPLY_ARRAY) {
+            std::vector<Point<int>> res;
+            const int len = reply->elements;
+            for (int i = 0; i < len; ++i) {
+                PGZXB_DEBUG_ASSERT(reply->element[i]->type == REDIS_REPLY_STRING);
+                Json json = Json::parse(std::string(reply->element[i]->str));
+                PGZXB_DEBUG_ASSERT(json.is_object());
+                res.push_back({json["x"], json["y"]});
+            }
+            return res;
+        }
+        MESS_LOG("Empty {0}", routlist_name);
+        return {};
     }
 
     std::optional<Point<int>> get_next_routing_position(const std::string &car_name) {
@@ -134,6 +178,12 @@ public:
         return auth_token_;
     }
 
+    static std::unique_ptr<Board> new_instance(const std::string &auth_token, const std::string &ip, short port) {
+        std::unique_ptr<Board> res{new Board{}};
+        res->init(auth_token, ip, port);
+        return res;
+    }
+
     static Board* get_instance() {
         static Board ins;
         return &ins;
@@ -141,17 +191,18 @@ public:
 
     void set_map_size(int w, int h) {
         auto map_size_name = make_key(MAP_SIZE_NAME);
-        auto *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s w %d h %d", map_size_name.c_str(), w, h);
+        [[maybe_unused]] auto *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s w %d h %d", map_size_name.c_str(), w, h);
         MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmget {0} w {1} h {2} failed: errmsg={3}", map_size_name, w, h, std::string(reply->str));
     }
 
     std::tuple<int, int> get_map_size() {
         auto map_size_name = make_key(MAP_SIZE_NAME);
-        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, "hmget %s w h", map_size_name.c_str());
+        auto cmd = std::string("hmget ").append(map_size_name).append(" w h");
+        auto *map_size_reply = (redisReply*)redisCommand(redis_ctx_, cmd.c_str());
         MESS_ERR_IF(!map_size_reply || map_size_reply->type == REDIS_REPLY_ERROR, "hmget {0} w h failed: errmsg={1}", map_size_name, map_size_reply->str);
-        PGZXB_DEBUG_ASSERT(map_size_reply->type == REDIS_REPLY_ARRAY);
-        PGZXB_DEBUG_ASSERT(map_size_reply->element[0]->type == REDIS_REPLY_STRING);
-        PGZXB_DEBUG_ASSERT(map_size_reply->element[1]->type == REDIS_REPLY_STRING);
+        if (map_size_reply->type != REDIS_REPLY_ARRAY || map_size_reply->elements != 2) return {-1, -1};
+        if (map_size_reply->element[0]->type != REDIS_REPLY_STRING) return {-1, -1};
+        if (map_size_reply->element[1]->type != REDIS_REPLY_STRING) return {-1, -1};
         return {std::atoi(map_size_reply->element[0]->str), std::atoi(map_size_reply->element[1]->str)};
     }
 private:
