@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    #StatisticsDmo \
+    StatisticsDemo \
     ConfigDemo \
     ExperimentDemandDemo \
     MESSDisplayWidgetDemo \

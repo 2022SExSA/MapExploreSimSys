@@ -2,12 +2,11 @@
 
 #include <QApplication>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
     StatisticsWidget x("123");
-    //x.show();
+    x.show();
 
     return a.exec();
 }

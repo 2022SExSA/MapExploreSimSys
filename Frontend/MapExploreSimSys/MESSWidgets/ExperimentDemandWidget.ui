@@ -16,6 +16,9 @@
   <layout class="QVBoxLayout" name="verticalLayout" stretch="3,2">
    <item>
     <widget class="QTabWidget" name="tabWidgetDisplay">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
        <string>Tab 1</string>
