@@ -20,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     BaseDisplayWidget.cpp \
+    StatisticsConfigWidget.cpp \
     StatisticsWidget.cpp \
     ExperimentConfigWidget.cpp \
     ExperimentDemandWidget.cpp \
@@ -40,6 +41,7 @@ HEADERS += \
     JsonModel.h \
     LoginWidget.h \
     MESSDisplayWidget.h \
+    StatisticsConfigWidget.h \
     StatisticsWidget.h \
     MESSSimulationWidget.h \
     ObjectEditWidget.h \
@@ -59,6 +61,7 @@ unix {
 !isEmpty(target.path): INSTALLS += target
 
 FORMS += \
+    StatisticsConfigWidget.ui \
     ExperimentDemandWidget.ui \
     LoginWidget.ui \
     RegisterWidget.ui \

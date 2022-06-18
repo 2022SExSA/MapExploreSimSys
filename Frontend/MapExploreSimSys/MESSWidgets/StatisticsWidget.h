@@ -2,6 +2,7 @@
 #define STATISTICSWIDGE_H
 
 #include <QWidget>
+#include "StatisticsConfigWidget.h"
 #include <vector>
 #include "dll_export.h"
 #include <QJsonValue>
@@ -25,7 +26,7 @@ class MESSWIDGETS_EXPORT StatisticsWidget : public QWidget
 public:
     explicit StatisticsWidget(const QString &ws_url,QWidget *parent = nullptr);
     ~StatisticsWidget();
-    void initial_data(const std::vector<QJsonValue> json_list);
+    void initial_data(const std::vector<QJsonObject> json_list);
     void paint_chart();
 public slots:
     void wsOnMessage(const QString &msg);
@@ -34,12 +35,16 @@ private slots:
 
     void on_stop_button_clicked();
 
+    void on_begin_button_2_clicked();
+
 private:
     Ui::StatisticsWidget *ui;
     QUrl ws_server_url_;
     QWebSocket *ws_socket_{nullptr};
     std::vector<QLineSeries> line_list;
-    QMap<QString,int> line_name_node;
+    std::vector<QJsonObject> config_data;
+    QMap<int,int> line_name_node;
+    StatisticsConfigWidget *config_ui;
 };
 
 #endif // STATISTICSWIDGE_H
