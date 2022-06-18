@@ -23,6 +23,8 @@ public:
     explicit StatisticsConfigWidget(QWidget *parent = nullptr);
     ~StatisticsConfigWidget();
     void show_table(int num, QJsonObject json);
+    std::vector<QJsonObject> get_config_data();
+    QMap<int,int> get_config_data_flag();
 
 private slots:
     void on_pushButtonadd_clicked();
@@ -35,7 +37,7 @@ private slots:
 private:
     Ui::StatisticsConfigWidget *ui;
     std::vector<QJsonObject> config_data;
-//    QMap<QString,int> config_data_num;
+    QMap<int,int> config_data_flag;
 };
 
 #endif // STATISTICSCONFIGWIDGET_H

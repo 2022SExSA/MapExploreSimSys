@@ -2,6 +2,7 @@
 #include "ui_StatisticsConfigWidget.h"
 #include <QMessageBox>
 #include <QDebug>
+#include <QDateTime>
 
 
 StatisticsConfigWidget::StatisticsConfigWidget(QWidget *parent) :
@@ -38,15 +39,30 @@ void StatisticsConfigWidget::show_table(int num, QJsonObject json)
      ui->tableWidget->update();
 }
 
+std::vector<QJsonObject> StatisticsConfigWidget::get_config_data()
+{
+    return config_data;
+}
+
+QMap<int, int> StatisticsConfigWidget::get_config_data_flag()
+{
+    return config_data_flag;
+}
+
 void StatisticsConfigWidget::on_pushButtonadd_clicked()
 {
 
     if(ui->widget->checkData()){
+        QDateTime time = QDateTime::currentDateTime();   //获取当前时间
+        int timeT = time.toTime_t();
         int row = ui->tableWidget->rowCount();
         ui->tableWidget->setRowCount(row+1);
         QString config = ui->widget->getData().c_str();
         QJsonDocument jsonDocument = QJsonDocument::fromJson(config.toLocal8Bit().data());
         QJsonObject json = jsonDocument.object();
+        json["auth_token"] = timeT;
+        config_data_flag[timeT] = row;
+//        qDebug() << row;
         config_data.push_back(json);
         show_table(row,json);
 //        QJsonArray car = json["car_components_config"];
