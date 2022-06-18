@@ -19,8 +19,7 @@ namespace Ui {
 class StatisticsWidget;
 }
 
-class MESSWIDGETS_EXPORT StatisticsWidget : public QWidget
-{
+class MESSWIDGETS_EXPORT StatisticsWidget : public QWidget {
     Q_OBJECT
 
 public:
@@ -43,8 +42,10 @@ private:
     QWebSocket *ws_socket_{nullptr};
     std::vector<QLineSeries> line_list;
     std::vector<QJsonObject> config_data;
-    QMap<int,int> line_name_node;
+    QMap<QString,int> line_name_node;
     StatisticsConfigWidget *config_ui;
+    QChartView *chartView;
+    QChart *mChart;
 };
 
 #endif // STATISTICSWIDGE_H

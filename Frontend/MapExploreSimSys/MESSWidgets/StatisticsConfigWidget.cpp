@@ -44,7 +44,7 @@ std::vector<QJsonObject> StatisticsConfigWidget::get_config_data()
     return config_data;
 }
 
-QMap<int, int> StatisticsConfigWidget::get_config_data_flag()
+QMap<QString, int> StatisticsConfigWidget::get_config_data_flag()
 {
     return config_data_flag;
 }
@@ -60,15 +60,12 @@ void StatisticsConfigWidget::on_pushButtonadd_clicked()
         QString config = ui->widget->getData().c_str();
         QJsonDocument jsonDocument = QJsonDocument::fromJson(config.toLocal8Bit().data());
         QJsonObject json = jsonDocument.object();
-        json["auth_token"] = timeT;
-        config_data_flag[timeT] = row;
-//        qDebug() << row;
+        json["auth_token"] = "Statistics" + QString::number(timeT) + "_" + QString::number(count);
+        config_data_flag["Statistics" + QString::number(timeT) + "_" + QString::number(count)] = row;
+        count++;
         config_data.push_back(json);
         show_table(row,json);
-//        QJsonArray car = json["car_components_config"];
-
-    }
-    else{
+    } else{
         QMessageBox::warning(this,tr("警告"),tr("配置数据不全或错误"),QMessageBox::Ok,QMessageBox::Ok);
     }
 }
