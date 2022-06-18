@@ -1,4 +1,4 @@
-#include "ExperimentConfigWidget.h"
+ #include "ExperimentConfigWidget.h"
 #include "ui_ExperimentConfigWidget.h"
 #include "ObjectEditWidget.h"
 
@@ -153,6 +153,7 @@ bool ExperimentConfigWidget::setDataFromJSON(const QJsonValue &json) {
     ExperimentConfig data;
     try {
         xpack::json::decode(json_doc.toJson().data(), data);
+        data_ = data;
     } catch (const std::exception &e) {
         return false;
     }
