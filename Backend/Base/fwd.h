@@ -63,6 +63,7 @@ constexpr char MAP_BLOCK_NAME[]           = "MapBlock";       // MapBlock
 constexpr char MAP_SIZE_NAME[]            = "MapSize";        // MapSize
 
 constexpr char EXPERIMENT_STATE_NAME[]    = "ExperState";
+constexpr char EXPERIMENT_FREAME_CNT_NAME[]    = "ExperFrCnt";
 
 constexpr int MAP_GRID_COVERED_FLAG = 1;
 constexpr int MAP_GRID_RAW_FLAG = 0;
