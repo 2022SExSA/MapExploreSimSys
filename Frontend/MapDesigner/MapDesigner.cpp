@@ -57,7 +57,7 @@ void MapDesigner::paintEvent(QPaintEvent *Event) {
 
 void MapDesigner::mousePressEvent(QMouseEvent *Event)
 {
-    if(ui->width->value() != 0 && ui->height->value() != 0){
+    if(ui->width->value() != 0 && ui->height->value() != 0 && Event->x()>0 && Event->y()>0){
         if(Event->button() == Qt::LeftButton){
             push_flag = true;
             push_status = false;
@@ -85,7 +85,7 @@ void MapDesigner::mousePressEvent(QMouseEvent *Event)
 
 void MapDesigner::mouseMoveEvent(QMouseEvent *e)
 {
-    if(push_flag){
+    if(push_flag && e->x()>0 && e->y()>0){
         int x_num_begin;
         int y_num_begin;
         int x_num_end;
@@ -152,6 +152,7 @@ void MapDesigner::closeEvent(QCloseEvent *event)
         if (result == QMessageBox::Yes){
             if(save()){
                 event->accept();
+                return;
             }
             event->ignore();
         }
@@ -217,7 +218,7 @@ bool MapDesigner::open_file()
         while(true) {
             std::string tmp;
             std::getline(ifs, tmp);
-            qDebug() << tmp.c_str();
+            //qDebug() << tmp.c_str();
             if (tmp.empty()) break;
             in.append(tmp);
         }

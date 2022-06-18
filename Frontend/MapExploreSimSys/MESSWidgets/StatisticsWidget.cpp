@@ -29,7 +29,7 @@ void StatisticsWidget::initial_data(std::vector<QJsonValue> json_list)
     ui->tableWidget->setRowCount(json_list.size()+1);
     ui->tableWidget->setColumnCount(5);
 
-    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "算法" << "地图尺寸" << "小车数量" << "执行时间" << "点亮区域");
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "导航算法" << "地图尺寸" << "小车数量" << "执行时间" << "点亮区域");
     for(int i = 0; i < json_list.size(); i++){
         QJsonObject json = json_list[i].toObject();
         line_list[i].setName(json["plugin_id"].toString());
