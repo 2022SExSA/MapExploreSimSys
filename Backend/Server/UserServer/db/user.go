@@ -3,19 +3,29 @@ package db
 import (
 	"UserServer/merr"
 	"UserServer/model"
-	"github.com/dgrijalva/jwt-go"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
-func AuthUser(id, pwd string) (string, error) {
-	rows, err := conn.Query("select id, password, name, type from user_table where id = ?", id)
+func AuthUser(id, pwd string, ty int) (string, error) {
+	rows, err := conn.Query("select password, type from user_table where id = ?", id)
 	if err != nil {
 		panic(err)
 	}
+	defer rows.Close()
 	if !rows.Next() {
 		return "", merr.MErr("用户不存在")
 	}
-
+	var p string
+	var t int
+	rows.Scan(&p, &t)
+	if p != pwd {
+		return "", merr.MErr("密码错误")
+	}
+	if t != ty {
+		return "", merr.MErr("用户类型不匹配")
+	}
 	token, err := GetToken(id)
 	return token, err
 }
@@ -25,6 +35,7 @@ func GetUserInfo(id string) (model.User, error) {
 	if err != nil {
 		panic(err)
 	}
+	defer rows.Close()
 	if !rows.Next() {
 		return model.User{}, merr.MErr("用户不存在")
 	}
@@ -34,11 +45,13 @@ func GetUserInfo(id string) (model.User, error) {
 	return user, nil
 }
 
-
 func AddUser(u model.User) error {
+	if _, err := GetUserInfo(u.ID); err == nil {
+		return merr.MErr("用户已存在")
+	}
 	_, err := conn.Exec("insert into user_table(id, password, name, type) values(?, ?, ?, ?)", u.ID, u.Password, u.Name, u.Type)
 	if err != nil {
-		return err
+		return merr.MErr("内部错误(联系开发人员)：" + err.Error())
 	}
 	return nil
 }
@@ -60,11 +73,12 @@ func UpdateUser(new_user model.User) error {
 }
 
 func FindUsers(column, pattern string) ([]model.User, error) {
-	rows, err := conn.Query("select id, password, name, type from user_table where " + column + " like ?", pattern)
-	if err != nil {
-		panic(err)
-	}
+	rows, err := conn.Query("select id, password, name, type from user_table where "+column+" like ?", pattern)
 	res := make([]model.User, 0, 10)
+	defer rows.Close()
+	if err != nil {
+		return res, err
+	}
 	for rows.Next() {
 		user := model.User{}
 		rows.Scan(&user.ID, &user.Password, &user.Name, &user.Type)
@@ -72,11 +86,12 @@ func FindUsers(column, pattern string) ([]model.User, error) {
 	}
 	return res, nil
 }
+
 var jwt_secret string = "PGZXB_MESS_USER2022SExSA"
 
 type claims struct {
-	ID       string  `json:"id"`
-	Type int `json:"type"`
+	ID   string `json:"id"`
+	Type int    `json:"type"`
 	jwt.StandardClaims
 }
 
@@ -106,4 +121,3 @@ func GetToken(id string) (string, error) {
 
 	return token, nil
 }
-

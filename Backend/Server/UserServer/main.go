@@ -7,6 +7,7 @@ import (
 	"UserServer/model"
 	"UserServer/utils"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,7 @@ func init() {
 type auth struct {
 	ID       string `json:"id"`
 	Password string `json:"password"`
+	Type     int    `json:"type"`
 }
 
 // add_user model.User
@@ -41,7 +43,7 @@ func main() {
 	r.POST("/auth_user", func(c *gin.Context) {
 		var a auth
 		c.ShouldBind(&a)
-		token, err := db.AuthUser(a.ID, a.Password)
+		token, err := db.AuthUser(a.ID, a.Password, a.Type)
 		if err != nil {
 			utils.Response(c, 200, err, nil)
 			return
@@ -51,9 +53,20 @@ func main() {
 		})
 	})
 
+	r.POST("/add_user", func(c *gin.Context) {
+		var u model.User
+		c.ShouldBind(&u)
+		if u.Type != model.UserType {
+			utils.Response(c, 200, merr.MErr("权限不足"), nil)
+			return
+		}
+		err := db.AddUser(u)
+		utils.Response(c, 200, err, nil)
+	})
+
 	r.Use(middleware.Jwt())
 
-	r.POST("/add_user", func(c *gin.Context) {
+	r.POST("/m_add_user", func(c *gin.Context) {
 		var u model.User
 		c.ShouldBind(&u)
 		err := db.AddUser(u)
