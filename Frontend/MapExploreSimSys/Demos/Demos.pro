@@ -7,4 +7,5 @@ SUBDIRS += \
     ConfigDemo \
     ExperimentDemandDemo \
     MESSDisplayWidgetDemo \
-    MESSSimulationDemo
+    MESSSimulationDemo \
+    UserMgrDemo

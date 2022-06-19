@@ -1,5 +1,5 @@
-#ifndef WIDGET_H
-#define WIDGET_H
+#ifndef LOGINWIDGET_H
+#define LOGINWIDGET_H
 
 #include "dll_export.h"
 #include "da_utils.h"
@@ -27,4 +27,4 @@ private:
     Ui::LoginWidget *ui;
     std::function<void(UserType, const std::string &)> after_login{nullptr};
 };
-#endif // WIDGET_H
+#endif // !LOGINWIDGET_H

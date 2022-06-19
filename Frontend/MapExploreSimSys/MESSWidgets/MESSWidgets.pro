@@ -31,6 +31,7 @@ SOURCES += \
     ObjectEntryEditWidget.cpp \
     $$PWD/../../External/QJsonModel/qjsonmodel.cpp \
     RegisterWidget.cpp \
+    UserMgrWidget.cpp \
     da_utils.cpp \
     utils.cpp
 
@@ -49,6 +50,7 @@ HEADERS += \
     $$PWD/../../External/QJsonModel/qjsonmodel.h \
     RegisterWidget.h \
     RenderOrder.h \
+    UserMgrWidget.h \
     config.h \
     da_utils.h \
     dll_export.h \
@@ -67,7 +69,8 @@ FORMS += \
     RegisterWidget.ui \
     StatisticsWidget.ui \
     ExperimentConfigWidget.ui \
-    MESSSimulationWidget.ui
+    MESSSimulationWidget.ui \
+    UserMgrWidget.ui
 
 INCLUDEPATH += $$PWD/../../External/xpack/
 INCLUDEPATH += $$PWD/../../External/QJsonModel/
