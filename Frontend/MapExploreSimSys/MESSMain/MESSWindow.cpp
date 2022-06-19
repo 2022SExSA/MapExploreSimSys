@@ -1,9 +1,9 @@
 #include "MESSWindow.h"
 #include "ui_MESSWindow.h"
-#include "MESSSimulationWidget.h"
 #include "server_config.h"
-#include "StatisticsWidget.h"
 #include "MapDesigner.h"
+#include "StatisticsWidget.h"
+#include "MESSSimulationWidget.h"
 #include "ExperimentDemandWidget.h"
 #include <QDebug>
 
@@ -26,21 +26,21 @@ MESSWindow::~MESSWindow() {
 
 void MESSWindow::on_pushButton_simulate_clicked()
 {
-     MESSSimulationWidget *w = new MESSSimulationWidget(HTTP_ROOT_URL);
+     MESSSimulationWidget *w = new MESSSimulationWidget(SIMULATION_SERVER_HTTP_ROOT_URL);
      ui->tabWidget->addTab(w,"实验仿真");
      ui->tabWidget->setCurrentWidget(w);
 }
 
 void MESSWindow::on_pushButton_statistics_clicked()
 {
-    StatisticsWidget *w = new StatisticsWidget(WEBSOCKET_URL);
+    StatisticsWidget *w = new StatisticsWidget(SIMULATION_SERVER_WEBSOCKET_URL);
     ui->tabWidget->addTab(w,"实验数据统计");
     ui->tabWidget->setCurrentWidget(w);
 }
 
 void MESSWindow::on_pushButton_playback_clicked()
 {
-    ExperimentDemandWidget *w = new ExperimentDemandWidget(HTTP_ROOT_URL);
+    ExperimentDemandWidget *w = new ExperimentDemandWidget(SIMULATION_SERVER_HTTP_ROOT_URL);
     ui->tabWidget->addTab(w,"实验回放");
     ui->tabWidget->setCurrentWidget(w);
 }

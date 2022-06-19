@@ -53,9 +53,11 @@ HEADERS += \
     RenderOrder.h \
     MapDesigner.h \
     UserMgrWidget.h \
+    backend_config.h \
     config.h \
     da_utils.h \
     dll_export.h \
+    server_config.h \
     utils.h
 
 # Default rules for deployment.
