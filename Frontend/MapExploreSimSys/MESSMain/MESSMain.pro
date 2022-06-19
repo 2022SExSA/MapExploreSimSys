@@ -23,7 +23,7 @@ SOURCES += \
 
 HEADERS += \
     MESSWindow.h \
-    ServerConfig.h
+    server_config.h
 
 FORMS += \
     MESSWindow.ui
