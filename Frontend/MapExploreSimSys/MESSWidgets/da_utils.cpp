@@ -1,32 +1,80 @@
 #include "da_utils.h"
 
+#include "utils.h"
 #include <QVector>
+#include <QNetworkAccessManager>
 
-LoginState AuthUser(QString id, QString password, UserType type) {
+static QNetworkAccessManager *http{nullptr};
+static QString http_url;
 
+struct Auth {
+    std::string id;
+    std::string password;
+    int type;
+
+    XPACK(O(id, password, type));
+};
+
+struct RM {
+    std::string id;
+
+    XPACK(O(id));
+};
+
+struct FU {
+    std::string column;
+    std::string infix;
+
+    XPACK(O(column, infix));
+};
+
+#define DEFINE_POST(relurl, body_object) \
+    syncHttpPOST(http, http_url + (relurl), QByteArray::fromStdString(xpack::json::encode(body_object)), \
+        [&rd](const QString &body) { \
+            try { qDebug() << body; \
+                xpack::json::decode(body.toStdString(), rd); \
+            } catch (const std::exception &e) { \
+                rd.code = -1; \
+                rd.msg = e.what(); \
+            } \
+        }, \
+        [&rd](const QString &msg) { \
+            rd.code = -1; \
+            rd.msg = msg.toStdString(); \
+        });
+
+void InitDAUtils(const QString & http_url) {
+    ::http = new QNetworkAccessManager;
+    ::http_url = http_url;
 }
 
-RegisterState AddUser(const UserInfo & u) {
-
+QVector<UserInfo> GetUserInfoWithFilter(QString infix, QString column, RD &rd) {
+    FU f = {column.toStdString(), infix.toStdString()};
+    DEFINE_POST("/find_users", f);
 }
 
-QVector<UserInfo> GetUserInfoWithFilter(QString Text, QString Column) {
-
+QVector<UserInfo> GetAllUserInfo(RD &rd) {
+    GetUserInfoWithFilter("id", "", rd);
 }
 
-
-bool InsertUser(UserInfo userInfo) {
-    return true;
+void InsertUser(UserInfo userInfo, RD &rd) {
+    AddUser(userInfo, rd);
 }
 
-bool DeleteUser(QString id) {
-    return true;
+void DeleteUser(QString id, RD &rd) {
+    RM rm = {id.toStdString()};
+    DEFINE_POST("/remove_user", rm);
 }
 
-bool UpdatingUser(UserInfo userInfo) {
-    return true;
+void UpdatingUser(UserInfo userInfo, RD &rd) {
+    DEFINE_POST("/update_user", userInfo);
 }
 
-QVector<UserInfo> GetAllUserInfo() {
+void AuthUser(QString ID, QString Password, UserType type, RD &rd) {
+    Auth a = {ID.toStdString(), Password.toStdString(), (int)type};
+    DEFINE_POST("/auth_user", a);
+}
 
+void AddUser(const UserInfo &u, RD &rd) {
+    DEFINE_POST("/add_user", u);
 }

@@ -9,13 +9,14 @@ LoginWidget::LoginWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::LoginWidget) {
     ui->setupUi(this);
+    ui->UserRadioButton->setChecked(true);
 }
 
 LoginWidget::~LoginWidget() {
     delete ui;
 }
 
-void LoginWidget::setAfterLogin(const std::function<void ()> & func) {
+void LoginWidget::setAfterLogin(const std::function<void (UserType, const std::string &)> & func) {
     after_login = func;
 }
 
@@ -24,24 +25,12 @@ void LoginWidget::on_LoginPushButton_clicked() {
     QString password = ui->PasswordLineEdit->text();
     bool userType = ui->UserRadioButton->isChecked();
     bool adminType = ui->UserRadioButton->isChecked(); Q_UNUSED(adminType);
-    LoginState state = AuthUser(id, password, userType ? User : Admin);
-    // FIXME: 判断state提示用户什么错误
-    // 1. "用户名不存在"
-    // 2. "密码错误"
-    // 3. "用户类型不匹配"
-    // 4. "登录成功"
-    if (state == UserNameNotFound) {
-        QMessageBox::warning(this, "登录失败", "用户不存在");
-        return;
-    } else if (state == UserNamePasswordNotMatched) {
-        QMessageBox::warning(this, "登录失败", "密码错误");
-        return;
-    } else if (state == UserTypeNotMatched) {
-        QMessageBox::warning(this, "登录失败", "用户类型不匹配");
-        return;
-    }
-    if (state == LoginSuccess) {
-        if (after_login) after_login();
+    RD rd;
+    AuthUser(id, password, userType ? User : Admin, rd);
+    if (rd.code == 0) {
+        if (after_login) after_login((userType ? User : Admin), rd.data["token"].GetString());
+    } else {
+        QMessageBox::warning(this, "登录失败", rd.msg.c_str());
     }
 }
 

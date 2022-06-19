@@ -2,6 +2,9 @@
 #define da_utils_h
 #include <QString>
 
+#include "dll_export.h"
+#include "xpack/json.h"
+
 enum LoginState {
     UserNameNotFound,
     UserNamePasswordNotMatched,
@@ -20,24 +23,37 @@ enum UserType {
 };
 
 struct UserInfo {
-    QString id;
-    QString password;
-    QString name;
-    UserType type;
+    std::string id;
+    std::string password;
+    std::string name;
+    int type;
+
+    XPACK(O(id, password, name, type));
 };
 
-QVector<UserInfo> GetUserInfoWithFilter(QString infix, QString column);
+struct RDStruct {
+    int code; // 0: Success
+    std::string msg;
+    xpack::JsonData data;
 
-QVector<UserInfo> GetAllUserInfo();
+    XPACK(O(code, msg, data));
+};
+using RD = RDStruct;
 
-bool InsertUser(UserInfo userInfo);
+MESSWIDGETS_EXPORT void InitDAUtils(const QString &http_url);
 
-bool DeleteUser(QString id);
+QVector<UserInfo> GetUserInfoWithFilter(QString infix, QString column, RD &rd);
 
-bool UpdatingUser(UserInfo userInfo);
+QVector<UserInfo> GetAllUserInfo(RD &rd);
 
-LoginState AuthUser(QString ID, QString Password, UserType type);
+void InsertUser(UserInfo userInfo, RD &rd);
 
-RegisterState AddUser(const UserInfo &u);
+void DeleteUser(QString id, RD &rd);
+
+void UpdatingUser(UserInfo userInfo, RD &rd);
+
+void AuthUser(QString ID, QString Password, UserType type, RD &rd);
+
+void AddUser(const UserInfo &u, RD &rd);
 
 #endif // !da_utils_h

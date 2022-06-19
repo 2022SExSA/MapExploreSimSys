@@ -205,6 +205,11 @@ void asyncHttpPOST(
     std::function<void (const QString &)> then,
     std::function<void(const QString &)> err);
 
+void syncHttpPOST(
+    QNAM *mgr, const QString & url, const QByteArray &body,
+    std::function<void (const QString &)> then,
+    std::function<void(const QString &)> err);
+
 struct RespData {
     int code{-1};
     std::string msg;

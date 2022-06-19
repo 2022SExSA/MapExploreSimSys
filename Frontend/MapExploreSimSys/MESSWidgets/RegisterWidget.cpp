@@ -7,7 +7,7 @@
 
 RegisterWidget::RegisterWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::RegisterForm) {
+    ui(new Ui::RegisterWidget) {
     ui->setupUi(this);
 }
 
@@ -36,12 +36,28 @@ void RegisterWidget::on_ConfirmPushbutton_clicked() {
             if (password != password_con) {
                 QMessageBox::warning(this,"提示","密码不一致");
             } else {
-                //判断id是否重复
                 LoginWidget *w = new LoginWidget();
-                QMessageBox::information(this,"提示",QString("注册成功"));
-                this->close();
-                w->show();
+                RD rd;
+                UserInfo u;
+                u.id = ui->UserLineEdit->text().toStdString();
+                u.name = ui->NameLineEdit->text().toStdString();
+                u.password = ui->PasswordLineEdit->text().toStdString();
+                AddUser(u, rd);
+                if (rd.code == 0) {
+                    QMessageBox::information(this, "提示", QString("注册成功"));
+                    this->close();
+                    w->show();
+                } else {
+                    QMessageBox::warning(this, "注册失败", rd.msg.c_str());
+                }
+
             }
         }
     }
+}
+
+void RegisterWidget::on_ExitPushbutton_clicked() {
+    LoginWidget *w = new LoginWidget();
+    w->show();
+    this->close();
 }

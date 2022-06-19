@@ -4,6 +4,7 @@
 #include <QNetworkReply>
 #include <QMessageBox>
 #include <QNetworkAccessManager>
+#include <QEventLoop>
 
 void asyncHttpGET(
         QNAM * mgr, const QString & url,
@@ -24,24 +25,15 @@ void asyncHttpPOST(
         std::function<void (const QString &)> then,
         std::function<void(const QString &)> err) {
     QNetworkRequest resq(url);
-    qDebug() << __FILE__ << __LINE__;
     resq.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    qDebug() << __FILE__ << __LINE__;
     QNetworkReply *reply = mgr->post(resq, body);
-    qDebug() << __FILE__ << __LINE__;
     QObject::connect(reply, &QNetworkReply::finished, [then, err, reply]() {
-        qDebug() << __FILE__ << __LINE__;
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << __FILE__ << __LINE__;
             err(reply->errorString());
-        qDebug() << __FILE__ << __LINE__;
             return;
         }
-        qDebug() << __FILE__ << __LINE__;
         then(reply->readAll());
-        qDebug() << __FILE__ << __LINE__;
     });
-    qDebug() << __FILE__ << __LINE__;
 }
 
 RespData json2ResponseData(const std::string & str, bool *ok) {
@@ -55,4 +47,18 @@ RespData json2ResponseData(const std::string & str, bool *ok) {
 
     if (ok) *ok = true;
     return {};
+}
+
+void syncHttpPOST(QNAM * mgr, const QString & url, const QByteArray & body, std::function<void (const QString &)> then, std::function<void (const QString &)> err) {
+    QNetworkRequest resq(url);
+    resq.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply *reply = mgr->post(resq, body);
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    if (reply->error() != QNetworkReply::NoError) {
+        err(reply->errorString());
+        return;
+    }
+    then(reply->readAll());
 }

@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-namespace Ui { class RegisterForm; }
+namespace Ui { class RegisterWidget; }
 
 class RegisterWidget : public QWidget {
     Q_OBJECT
@@ -15,8 +15,10 @@ public:
 private slots:
     void on_ConfirmPushbutton_clicked();
 
+    void on_ExitPushbutton_clicked();
+
 private:
-    Ui::RegisterForm *ui;
+    Ui::RegisterWidget *ui;
 };
 
 #endif // REGISTERFORM_H
