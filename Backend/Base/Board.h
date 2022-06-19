@@ -25,6 +25,28 @@ public:
         this->auth_token_ = auth_token;
     }
 
+    bool set_fream_cnt(int val) {
+        // set {auth-token}ExperFrCnt
+        auto key = make_key(EXPERIMENT_FREAME_CNT_NAME);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "set %s %d", key.c_str(), (int)val);
+        return reply && reply->type != REDIS_REPLY_ERROR;
+    }
+
+    int get_frame_cnt() {
+        // get {auth-token}ExperFrCnt
+        auto key = make_key(EXPERIMENT_FREAME_CNT_NAME);
+        redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "get %s", key.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "get {0} failed: errmsg={1}", key, std::string(reply->str));
+        if (reply->type == REDIS_REPLY_STRING) {
+            try {
+                return std::stod(reply->str);
+            } catch (const std::exception &) {
+            }
+        }
+        MESS_LOG("Get frame count failed, str={0}", reply ? reply->str : std::string("<null-reply>"));
+        return -1;
+    }
+
     bool set_experiment_state(ES val) {
         // set {auth-token}ExperimentState
         auto state_key = make_key(EXPERIMENT_STATE_NAME);
@@ -148,6 +170,15 @@ public:
         redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "hmset %s x %d y %d", position_name.c_str(), pos.x, pos.y);
         MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "hmset %s x %d y %d failed: errmsg={1}", position_name.c_str(), pos.x, pos.y, std::string(reply->str));
         return reply && reply->type != REDIS_REPLY_ERROR;
+    }
+
+    int count_raw_grid_of_map() {
+        static_assert(MAP_GRID_RAW_FLAG == 0);
+        auto key = make_key(MAP_NAME);
+        redisReply *covered_cnt_reply = (redisReply*)redisCommand(redis_ctx_, "bitcount %s", key.c_str());
+        MESS_ERR_IF(!covered_cnt_reply || covered_cnt_reply->type != REDIS_REPLY_INTEGER, "bitount {0} faile", key);
+        const auto [w, h] = get_map_size();
+        return w * h - covered_cnt_reply->integer;        
     }
 
     int get_grid_of_map(int r, int c) {

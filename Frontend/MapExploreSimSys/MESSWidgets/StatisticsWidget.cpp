@@ -17,8 +17,10 @@ StatisticsWidget::StatisticsWidget(const QString &ws_url,QWidget *parent) :
     ui->horizontalLayout->addWidget(config_ui = new StatisticsConfigWidget());
     m_axisX = new QValueAxis();
     m_axisY = new QValueAxis();
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     chartView = new QChartView(this);
     mChart = new QChart();
+    chartView->hide();
 }
 
 StatisticsWidget::~StatisticsWidget() {
@@ -36,8 +38,9 @@ void StatisticsWidget::initial_data(std::vector<QJsonObject> json_list) {
     //qDebug()<<json_list.size();
     ui->tableWidget->setRowCount(json_list.size());
     ui->tableWidget->setColumnCount(5);
-
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "实验" << "地图尺寸" << "小车数量" << "执行时间" << "点亮区域");
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+//    ui->tableWidget->horizontalHeader()->setSectionResizeMode()
     for(std::size_t i = 0; i < json_list.size(); i++){
         QJsonObject json = json_list[i];
         int current_data = line_name_node[json["auth_token"].toString()];
@@ -114,8 +117,7 @@ void StatisticsWidget::on_begin_button_clicked()
 //    json.insert("statistics_begin",true);
     ui->horizontalLayout->removeWidget(config_ui);
     paint_chart();
-
-
+    chartView->show();
     ws_socket_->sendTextMessage("S");
 }
 
