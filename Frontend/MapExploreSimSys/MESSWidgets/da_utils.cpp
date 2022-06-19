@@ -59,7 +59,9 @@ QVector<UserInfo> GetUserInfoWithFilter(QString infix, QString column, RD &rd) {
     } catch (const std::exception &e) {
         qDebug() << e.what();
     }
-    return QVector(vec.begin(), vec.end());
+    QVector<UserInfo> res;
+    for (auto &e : vec) res.append(std::move(e));
+    return res;
 }
 
 QVector<UserInfo> GetAllUserInfo(RD &rd) {
