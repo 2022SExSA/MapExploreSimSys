@@ -2,6 +2,8 @@
 #include "ui_ExperimentDemandWidget.h"
 
 #include "utils.h"
+#include "server_config.h"
+#include "backend_config.h"
 #include "RenderOrder.h"
 
 #include <QTimer>
@@ -58,6 +60,11 @@ ExperimentDemandWidget::ExperimentDemandWidget(const QString &server_url, QWidge
         }
         ui->lineEditHisExperToken->setText(QString::number(i) + "#" + token);
     });
+
+    QObject::connect(ui->treeViewRunningExperiments, &QTreeView::clicked, [this] (const QModelIndex &index) {
+        auto token = getRootModelIndex(index).data().toString();
+        ui->lineEditRunExperToken->setText(token);
+    });
 }
 
 ExperimentDemandWidget::~ExperimentDemandWidget() {
@@ -83,7 +90,17 @@ void ExperimentDemandWidget::flushAndShow() {
         http_server_url_.toString() + "/get_running_simulations",
         {},
         [this](const QString &resp) {
-            auto json_doc = QJsonDocument::fromJson(resp.toUtf8());
+            const auto json_bytes = resp.toUtf8();
+            std::vector<backend_def::Config> backend_configs;
+            try {
+                xpack::json::decode(json_bytes.toStdString(), backend_configs);
+            }  catch (const std::exception &e) {
+                qDebug() << e.what();
+            }
+            for (const auto &e : backend_configs) {
+                ports_of_running_[e.auth_token.c_str()] = e.view_config.ws_url.port;
+            }
+            auto json_doc = QJsonDocument::fromJson(json_bytes);
             running_experiments_data_json_model.loadJson(QJsonDocument(json_doc.object()["data"].toObject()["experiments"].toObject()).toJson());
         },
         [this](const QString &err) {
@@ -239,9 +256,30 @@ void ExperimentDemandWidget::on_spinBox_valueChanged(int new_val) {
 }
 
 void ExperimentDemandWidget::on_tabWidgetDisplay_tabCloseRequested(int index) {
-    QWidget *pItemWidget = ui->tabWidgetDisplay->widget(index);
-    if (pItemWidget) {
-        pItemWidget->close();
-        pItemWidget->deleteLater();
+    QWidget *item_widget = ui->tabWidgetDisplay->widget(index);
+    if (item_widget) {
+        item_widget->close();
+        item_widget->deleteLater();
+    }
+}
+
+void ExperimentDemandWidget::on_pushButtonLiveExper_clicked() {
+    auto token = ui->lineEditRunExperToken->text();
+    if (!running_live_.count(token)) { // not exists
+        auto &r = running_live_[token];
+        r.display_widget = new MESSDisplayWidget;
+        r.display_widget->start(
+            QString("http://%1:%2")
+                .arg(VIEW_COMPONENT_SERVER_IP)
+                .arg(ports_of_running_[token]),
+            QString("ws://%1:%2")
+                .arg(VIEW_COMPONENT_SERVER_IP)
+                .arg(ports_of_running_[token])
+        );
+        ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);
+    } else {
+        auto &r = running_live_[token];
+        Q_ASSERT(r.display_widget);
+        ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);
     }
 }
