@@ -33,6 +33,7 @@ SOURCES += \
     RegisterWidget.cpp \
     UserMgrWidget.cpp \
     da_utils.cpp \
+    MapDesigner.cpp \
     utils.cpp
 
 HEADERS += \
@@ -50,6 +51,7 @@ HEADERS += \
     $$PWD/../../External/QJsonModel/qjsonmodel.h \
     RegisterWidget.h \
     RenderOrder.h \
+    MapDesigner.h \
     UserMgrWidget.h \
     config.h \
     da_utils.h \
@@ -69,6 +71,7 @@ FORMS += \
     RegisterWidget.ui \
     StatisticsWidget.ui \
     ExperimentConfigWidget.ui \
+    MapDesigner.ui\
     MESSSimulationWidget.ui \
     UserMgrWidget.ui
 

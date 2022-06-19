@@ -1,4 +1,5 @@
 #include "StatisticsWidget.h"
+#include "MapDesigner.h"
 
 #include <QApplication>
 
