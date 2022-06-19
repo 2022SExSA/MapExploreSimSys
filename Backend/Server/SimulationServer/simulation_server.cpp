@@ -330,10 +330,12 @@ int main() {
                             }
                         }
                         using namespace std::chrono_literals;
-                        std::this_thread::sleep_for(1000ms / 60);
+                        std::this_thread::sleep_for(500ms);
                     }
                 }));
             }
+        } else if (op == 'E') {
+            free_statistics_runtime(mess_ctx, db, channel);
         } else {
             MESS_LOG("Invalid request: {0}", msg);
         }
