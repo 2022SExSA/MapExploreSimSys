@@ -36,6 +36,9 @@ ExperimentDemandWidget::ExperimentDemandWidget(const QString &server_url, QWidge
     ui->tabWidgetData->setTabText(1, "实验历史");
     ui->tabWidgetDisplay->removeTab(0);
     ui->tabWidgetDisplay->removeTab(0);
+    ui->tabWidgetDisplay->setUsesScrollButtons(true);
+    ui->tabWidgetDisplay->setTabsClosable(true);
+    ui->tabWidgetDisplay->setMovable(true);
     flushAndShow();
 
     QObject::connect(ui->treeViewHistoryExperiment, &QTreeView::clicked, [this] (const QModelIndex &index) {
@@ -233,4 +236,12 @@ void ExperimentDemandWidget::on_spinBox_valueChanged(int new_val) {
     auto &p = playback_[token];
     p.delta_ms = 1000.f / new_val;
     if (p.running) p.flusher->start(p.delta_ms);
+}
+
+void ExperimentDemandWidget::on_tabWidgetDisplay_tabCloseRequested(int index) {
+    QWidget *pItemWidget = ui->tabWidgetDisplay->widget(index);
+    if (pItemWidget) {
+        pItemWidget->close();
+        pItemWidget->deleteLater();
+    }
 }

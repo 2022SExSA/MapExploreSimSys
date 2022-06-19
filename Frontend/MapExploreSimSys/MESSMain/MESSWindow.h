@@ -14,7 +14,22 @@ public:
     MESSWindow(QWidget *parent = nullptr);
     ~MESSWindow();
 
+private slots:
+    void on_pushButton_simulate_clicked();
+
+    void on_pushButton_statistics_clicked();
+
+    void on_pushButton_playback_clicked();
+
+    void on_pushButton_mapdesigner_clicked();
+    void on_tabWidget_tabCloseRequested(int index);
+
+
+
+    void on_tabWidget_tabBarDoubleClicked(int index);
+
 private:
     Ui::MESSWindow *ui;
+
 };
 #endif // MESSWINDOW_H

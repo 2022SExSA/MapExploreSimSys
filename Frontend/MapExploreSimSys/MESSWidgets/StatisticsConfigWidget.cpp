@@ -15,6 +15,7 @@ StatisticsConfigWidget::StatisticsConfigWidget(QWidget *parent) :
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     //ui->tableWidget->setItem(0,1,new QTableWidgetItem("配置数据1"));
     connect(ui->tableWidget,&QTableWidget::doubleClicked,this,&StatisticsConfigWidget::doublecliched_row);
 }

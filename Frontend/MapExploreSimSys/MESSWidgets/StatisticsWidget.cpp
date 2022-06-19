@@ -15,6 +15,7 @@ StatisticsWidget::StatisticsWidget(const QString &ws_url,QWidget *parent) :
         connect(ws_socket_, &QWebSocket::textMessageReceived, this, &StatisticsWidget::wsOnMessage);
     });
     ui->horizontalLayout->addWidget(config_ui = new StatisticsConfigWidget());
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     chartView = new QChartView(this);
     mChart = new QChart();
 }
@@ -29,8 +30,9 @@ void StatisticsWidget::initial_data(std::vector<QJsonObject> json_list) {
     //qDebug()<<json_list.size();
     ui->tableWidget->setRowCount(json_list.size());
     ui->tableWidget->setColumnCount(5);
-
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "实验" << "地图尺寸" << "小车数量" << "执行时间" << "点亮区域");
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+//    ui->tableWidget->horizontalHeader()->setSectionResizeMode()
     for(std::size_t i = 0; i < json_list.size(); i++){
         QJsonObject json = json_list[i];
         int current_data = line_name_node[json["auth_token"].toString()];
