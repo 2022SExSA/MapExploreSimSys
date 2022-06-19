@@ -40,12 +40,19 @@ private:
     Ui::StatisticsWidget *ui;
     QUrl ws_server_url_;
     QWebSocket *ws_socket_{nullptr};
-    std::vector<QLineSeries> line_list;
+    std::vector<QLineSeries*> line_list;
     std::vector<QJsonObject> config_data;
+    std::vector<std::vector<QPointF>> point_list;
     QMap<QString,int> line_name_node;
     StatisticsConfigWidget *config_ui;
     QChartView *chartView;
     QChart *mChart;
+    QValueAxis *m_axisX;
+    QValueAxis *m_axisY;
+    int AXIS_MIN_X = 0;
+    int AXIS_MIN_Y = 0;
+    int AXIS_MAX_X = 10;
+    int AXIS_MAX_Y = 10;
 };
 
 #endif // STATISTICSWIDGE_H
