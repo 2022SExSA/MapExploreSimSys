@@ -42,6 +42,8 @@ using RD = RDStruct;
 
 MESSWIDGETS_EXPORT void InitDAUtils(const QString &http_url);
 
+MESSWIDGETS_EXPORT void SetAuthToken(const std::string &token);
+
 QVector<UserInfo> GetUserInfoWithFilter(QString infix, QString column, RD &rd);
 
 QVector<UserInfo> GetAllUserInfo(RD &rd);

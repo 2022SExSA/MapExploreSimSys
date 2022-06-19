@@ -42,6 +42,7 @@ void RegisterWidget::on_ConfirmPushbutton_clicked() {
                 u.id = ui->UserLineEdit->text().toStdString();
                 u.name = ui->NameLineEdit->text().toStdString();
                 u.password = ui->PasswordLineEdit->text().toStdString();
+                u.type = User;
                 AddUser(u, rd);
                 if (rd.code == 0) {
                     QMessageBox::information(this, "提示", QString("注册成功"));
@@ -50,7 +51,6 @@ void RegisterWidget::on_ConfirmPushbutton_clicked() {
                 } else {
                     QMessageBox::warning(this, "注册失败", rd.msg.c_str());
                 }
-
             }
         }
     }
