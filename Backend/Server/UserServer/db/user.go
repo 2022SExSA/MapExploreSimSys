@@ -3,6 +3,7 @@ package db
 import (
 	"UserServer/merr"
 	"UserServer/model"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -46,6 +47,7 @@ func GetUserInfo(id string) (model.User, error) {
 }
 
 func AddUser(u model.User) error {
+	fmt.Printf("Add user=%v\n", u)
 	if _, err := GetUserInfo(u.ID); err == nil {
 		return merr.MErr("用户已存在")
 	}
@@ -57,6 +59,7 @@ func AddUser(u model.User) error {
 }
 
 func RemoveUser(id string) error {
+	fmt.Printf("Remove id=%v\n", id)
 	_, err := conn.Exec("delete from user_table where id = ?", id)
 	if err != nil {
 		return err

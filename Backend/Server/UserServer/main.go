@@ -93,7 +93,7 @@ func main() {
 
 	r.POST("/update_user", func(c *gin.Context) {
 		var u model.User
-		c.ShouldBind(&r)
+		c.ShouldBind(&u)
 		err := db.UpdateUser(u)
 		utils.Response(c, 200, err, nil)
 	})
