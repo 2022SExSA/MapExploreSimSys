@@ -36,8 +36,8 @@ void StatisticsConfigWidget::show_table(int num, QJsonObject json)
         QJsonObject x = navigator[i].toObject();
         plugin += x["plugin_id"].toString() + " ";
     }
-     ui->tableWidget->setItem(num,1,new QTableWidgetItem(plugin));
-     ui->tableWidget->update();
+    ui->tableWidget->setItem(num,1,new QTableWidgetItem(plugin));
+    ui->tableWidget->update();
 }
 
 std::vector<QJsonObject> StatisticsConfigWidget::get_config_data()
