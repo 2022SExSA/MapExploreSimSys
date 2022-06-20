@@ -77,13 +77,7 @@ void StatisticsConfigWidget::on_pushButtondelete_clicked()
 
     if (rowIndex != -1){
         ui->tableWidget->removeRow(rowIndex);
-        int count = 0;
-        for(auto temp = config_data.begin(); temp != config_data.end(); temp++){
-            if(count == rowIndex){
-                config_data.erase(temp);
-            }
-            count++;
-        }
+        config_data.erase(config_data.begin()+rowIndex);
         int row = ui->tableWidget->rowCount();
         for(int i = 0; i < row; i++){
             show_table(i,config_data[i]);
