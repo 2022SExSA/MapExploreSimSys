@@ -314,6 +314,7 @@ int main() {
                 context.sender_th.reset(new std::thread([channel, context, &mess_ctx]() {
                     while(true) {
                         if (channel->isClosed()) return;
+                        int cnt = 0;
                         for (const auto &e : context.config_list) {
                             const auto &token = e.auth_token;
                             auto iter  = mess_ctx.experiments.find(token);
@@ -325,10 +326,12 @@ int main() {
                                 data.auth_token = e.auth_token;
                                 data.light_grid = iter->second.board->count_raw_grid_of_map();
                                 channel->send(xpack::json::encode(data));
+                                ++cnt;
                             } else {
                                 MESS_LOG("{0} not found", token);
                             }
                         }
+                        if (cnt == 0) return;
                         using namespace std::chrono_literals;
                         std::this_thread::sleep_for(500ms);
                     }

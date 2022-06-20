@@ -39,6 +39,7 @@ private:
 
         if (op->op == "navi") { // navi <car1-id> <car2-id> ...
             auto *board = Board::get_instance();
+            MESS_LOG("navi for {0} cars", op->args.size());
             for (const auto &car_id : op->args) {
                 MESS_LOG("Navi for {0}", car_id);
                 auto pos = board->get_current_position_of_car(car_id);
@@ -65,11 +66,12 @@ private:
                         (std::pair<int, int>*)dest_pos_array.array,
                         (std::pair<int, int>*)dest_pos_array.array + dest_pos_array.size
                     ));
-
-                for (int i = 0; i < dest_pos_array.size; ++i) {
-                    auto &pos = dest_pos_array.array[i];
-                    [[maybe_unused]] auto ret = board->add_position_to_routlist(car_id, {pos.c, pos.r});
-                    MESS_ERR_IF(ret == -1, "", 1);
+                if (board->get_routlist_size(car_id) == 0) {
+                    for (int i = 0; i < dest_pos_array.size; ++i) {
+                        auto &pos = dest_pos_array.array[i];
+                        [[maybe_unused]] auto ret = board->add_position_to_routlist(car_id, {pos.c, pos.r});
+                        MESS_ERR_IF(ret == -1, "", 1);
+                    }
                 }
                 dest_pos_array.destroy_array(dest_pos_array.ctx);
             }

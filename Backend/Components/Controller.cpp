@@ -90,6 +90,7 @@ public:
                         car_ids.push_back(car.mq_name);
                     }
                 }
+                MESS_LOG("To rout : cars={0}", car_ids);
 
                 // Call navi ({auth_token} navi car1-id car2-id ...)
                 const int car_count = (int)car_ids.size();

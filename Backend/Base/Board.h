@@ -1,6 +1,7 @@
 #ifndef MESSBASE_BOARD_H
 #define MESSBASE_BOARD_H
 
+#include <hv/HttpMessage.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -72,8 +73,8 @@ public:
     }
 
     std::vector<std::string> get_all_cars() {
-        auto prefix = make_key(ROUTLIST_NAME_PREFIX);
-        auto res = get_keys_by_prefix(make_key(ROUTLIST_NAME_PREFIX));
+        auto prefix = make_key(CAR_POSITION_NAME_PREFIX);
+        auto res = get_keys_by_prefix(make_key(CAR_POSITION_NAME_PREFIX));
 
         const auto prefix_size = prefix.size();
         std::for_each(res.begin(), res.end(), [prefix_size](auto &e) {
@@ -149,6 +150,13 @@ public:
         return -1;
     }
 
+    void clear_routlist(const std::string &car_name) {
+        // ltrim {ROUTLIST_KEY} 1 0
+        auto routlist_name = make_key(ROUTLIST_NAME_FROMAT, car_name);
+        [[maybe_unused]] redisReply *reply = (redisReply*)redisCommand(redis_ctx_, "ltrim %s 1 0", routlist_name.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "ltrim {0} 1 0 failed: errmsg={1}", routlist_name, std::string(reply->str));
+    }
+
     std::optional<Point<int>> get_current_position_of_car(const std::string &car_name) {
         // hmget {auth-token}_Position@{car-name} x y
         auto position_name = make_key(CAR_POSITION_NAME_FORMAT, car_name);
@@ -191,6 +199,27 @@ public:
         auto [w, h] = get_map_size();
         if (r < 0 || r > h || c < 0 || c > w) return -1;
         return set_bit(make_key(MAP_NAME), r * w + c, val);
+    }
+
+    bool try_lock_grid(const std::string &car_name, int r, int c) {
+        // ASSERT(r and c is valid);
+        // setnx {AUTH_TOKEN}_{MAP_NAME}{r}_{c}
+        auto key = make_key(MAP_GRID_LOCK_NAME_FORMAT, MAP_NAME, r, c);
+        bool ok = try_lock(key, car_name);
+        if (ok) return true;
+        auto val = get_value_by_key(key);
+        return val.has_value() && val == car_name;
+    }
+
+    bool unlock_grid(const std::string &car_name, int r, int c) {
+        // ASSERT(r and c is valid);
+        // del {AUTH_TOKEN}_{MAP_NAME}{r}_{c}
+        auto key = make_key(MAP_GRID_LOCK_NAME_FORMAT, MAP_NAME, r, c);
+        auto val = get_value_by_key(key);
+        if (val.has_value() && val == car_name) {
+            return unlock(key);
+        }
+        return false;
     }
 
     int get_grid_of_map_block(int r, int c) {
@@ -246,6 +275,27 @@ private:
 
     std::string make_key_impl(std::string &&primal_key) {
         return auth_token_ + "_" + std::move(primal_key);
+    }
+
+    std::optional<std::string> get_value_by_key(const std::string &key) {
+        [[maybe_unused]] auto *reply = (redisReply*)redisCommand(redis_ctx_, "get %s", key.c_str());
+        MESS_ERR_IF(!reply || reply->type == REDIS_REPLY_ERROR, "get {0}, errmsg={1}", key, std::string(reply->str));
+        if (reply->type == REDIS_REPLY_STRING && reply->str != nullptr) return std::string(reply->str);
+        else return std::nullopt;
+    }
+
+    bool try_lock(const std::string &key, const std::string &val = "1") {
+        [[maybe_unused]] auto *reply = (redisReply*)redisCommand(redis_ctx_, "setnx %s %s", key.c_str(), val.c_str());
+        MESS_ERR_IF(!reply || reply->type != REDIS_REPLY_INTEGER, "setnx {0}, errmsg={1}", key, std::string(reply->str));
+        MESS_LOG("lock {0} ok={1}", key, reply->integer == 1);
+        return reply->integer == 1;
+    }
+
+    bool unlock(const std::string &key) {
+        [[maybe_unused]] auto *reply = (redisReply*)redisCommand(redis_ctx_, "del %s", key.c_str());
+        MESS_ERR_IF(!reply || reply->type != REDIS_REPLY_INTEGER, "del {0}, errmsg={1}", key, std::string(reply->str));
+        MESS_LOG("unlock {0} ok={1}", key, reply->integer == 1);
+        return reply->integer == 1;
     }
 
     int set_bit(const std::string &key, int offset, int val) {

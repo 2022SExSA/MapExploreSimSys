@@ -1,4 +1,3 @@
-#include <iostream>
 #undef MESSBASE_LIB
 #include "fwd.h"
 #include "navigator_plugin_utils.h"
@@ -24,6 +23,56 @@ static int messbase_navi_plugin_set_bfs_rand_seed() {
 }
 
 static volatile int messbase_navi_plugin_bfs_srand_flag = messbase_navi_plugin_set_bfs_rand_seed();
+
+using Vis = std::vector<std::vector<char>>;
+#define OTHERS dest_r, dest_c, w, h, vis, path, res, map_info_getter
+
+static void dfs(int r, int c, int dest_r, int dest_c, int w, int h, Vis &vis, std::vector<MESSNP_Position> &path, std::vector<MESSNP_Position> &res, MESSNP_MapInfoGetter *map_info_getter) {
+    if (!res.empty()) return; // Have got result; Only get first.
+    
+    vis[r][c] = true;
+    path.push_back({r, c});
+
+    if (r == dest_r && c == dest_c) { // Dest
+        res = path;
+        return;
+    }
+    
+    // Up
+    if (r > 0 && !vis[r - 1][c] && Call2(get_grid_of_map_block, r - 1, c) == 0) {
+        // vis[r - 1][c] = true;
+        // path.push_back({r - 1, c});
+        dfs(r - 1, c, OTHERS);
+        // vis[r - 1][c] = false;
+        // path.pop_back();
+    }
+    // Down
+    if (r + 1 < h && !vis[r + 1][c] && Call2(get_grid_of_map_block, r + 1, c) == 0) {
+        // vis[r + 1][c] = true;
+        // path.push_back({r + 1, c});
+        dfs(r + 1, c, OTHERS);
+        // vis[r + 1][c] = false;
+        // path.pop_back();
+    }
+    // Left
+    if (c > 0 && !vis[r][c - 1] && Call2(get_grid_of_map_block, r, c - 1) == 0) {
+        // vis[r][c - 1] = true;
+        // path.push_back({r, c - 1});
+        dfs(r, c - 1, OTHERS);
+        // vis[r][c - 1] = false;
+        // path.pop_back();
+    }
+    // Right
+    if (c + 1 < w && !vis[r][c + 1] && Call2(get_grid_of_map_block, r, c + 1) == 0) {
+        // vis[r][c + 1] = true;
+        // path.push_back({r, c + 1});
+        dfs(r, c + 1, OTHERS);
+        // vis[r][c + 1] = false;
+        // path.pop_back();
+    }
+    vis[r][c] = false;
+    path.pop_back();
+}
 
 void messbase_navi_plugi_free_pos_array(void* ctx) {
     delete (std::vector<MESSNP_Position>*)ctx;
@@ -63,8 +112,8 @@ int MESSNP_SELECT_DEST_POS_FUNC_V1(MESSNP_Position *dest_pos, const MESSNP_Posit
                 }
             }
         }
-        if (r == -1 && c != -1) {
-            PGZXB_DEBUG_Print("No nonblock");
+        if (r == -1 && c == -1) {
+            PGZXB_DEBUG_Print("No coverd but nonblocked");
         }
     }
    
@@ -84,59 +133,11 @@ int MESSNP_ROUTING_FUNC_V1(MESSNP_PositionArray *rout_pos_array, const MESSNP_Po
     const int dest_r = dest_pos->r;
     const int dest_c = dest_pos->c;
 
-    // BFS
-    struct RC { int r = -1, c = -1; };
-    std::queue<RC> q;
-    std::vector<std::vector<RC>> pre(h, std::vector<RC>(w, RC{-1, -1}));
-    std::vector<std::vector<char>> vis(h, std::vector<char>(w, false));
-    q.push({src_r, src_c});
-    while (!q.empty()) {
-        const int size = q.size();
-        for (int i = 0; i < size; ++i) {
-            RC p = q.front(); q.pop();
-            int r = p.r, c = p.c;
-            vis[r][c] = true;
-            if (r == dest_r && c == dest_c) {
-                decltype(q)().swap(q); // Clear q
-                break;
-            }
-            // Up
-            if (r > 0 && !vis[r - 1][c] && Call2(get_grid_of_map_block, r - 1, c) == 0) {
-                q.push({r - 1, c});
-                pre[r - 1][c] = {r, c};
-                vis[r - 1][c] = true;
-            }
-            // Down
-            if (r + 1 < h && !vis[r + 1][c] && Call2(get_grid_of_map_block, r + 1, c) == 0) {
-                q.push({r + 1, c});
-                pre[r + 1][c] = {r, c};
-                vis[r + 1][c] = true;
-            }
-            // Left
-            if (c > 0 && !vis[r][c - 1] && Call2(get_grid_of_map_block, r, c - 1) == 0) {
-                q.push({r, c - 1});
-                pre[r][c - 1] = {r, c};
-                vis[r][c - 1] = true;
-            }
-            // Right
-            if (c + 1 < w && !vis[r][c + 1] && Call2(get_grid_of_map_block, r, c + 1) == 0) {
-                q.push({r, c + 1});
-                pre[r][c + 1] = {r, c};
-                vis[r][c + 1] = true;
-            }
-        }
-    }
+    // DFS
 
-    // Gen route
-    int r = dest_r, c = dest_c;
-    pos_list->push_back({r, c});
-    while ((r != src_r || c != src_c) && r != -1 && c != -1) {
-        auto pre_pos = pre[r][c];
-        r = pre_pos.r;
-        c = pre_pos.c;
-        pos_list->push_back({r, c});
-    }
-    std::reverse(pos_list->begin(), pos_list->end());
+    std::vector<MESSNP_Position> path;
+    Vis vis(h, std::vector<char>(w, false));
+    dfs(src_r, src_c, dest_r, dest_c, w, h, vis, path, *pos_list, map_info_getter);
 
     // Return result
     rout_pos_array->array = pos_list->data();
