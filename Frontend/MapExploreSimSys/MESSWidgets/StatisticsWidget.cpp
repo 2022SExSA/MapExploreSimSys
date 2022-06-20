@@ -21,6 +21,8 @@ StatisticsWidget::StatisticsWidget(const QString &ws_url,QWidget *parent) :
     chartView = new QChartView(this);
     mChart = new QChart();
     chartView->hide();
+    ui->begin_button->hide();
+    ui->stop_button->hide();
 }
 
 StatisticsWidget::~StatisticsWidget() {
@@ -37,8 +39,8 @@ void StatisticsWidget::initial_data(std::vector<QJsonObject> json_list) {
     point_list = std::vector<std::vector<QPointF>> (json_list.size());
     //qDebug()<<json_list.size();
     ui->tableWidget->setRowCount(json_list.size());
-    ui->tableWidget->setColumnCount(5);
-    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "实验" << "地图尺寸" << "小车数量" << "执行时间" << "点亮区域");
+    ui->tableWidget->setColumnCount(6);
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "实验" << "导航器" << "地图尺寸" << "小车数量" << "执行时间" << "点亮区域");
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 //    ui->tableWidget->horizontalHeader()->setSectionResizeMode()
     for(std::size_t i = 0; i < json_list.size(); i++){
@@ -48,11 +50,19 @@ void StatisticsWidget::initial_data(std::vector<QJsonObject> json_list) {
         line_list[i]->setName("实验"+QString::number(current_data));
 //        line_name_node.insert(json["plugin_id"].toString(),i);
         ui->tableWidget->setItem(current_data,0,new QTableWidgetItem("实验"+QString::number(current_data)));
-        ui->tableWidget->setItem(current_data,2,new QTableWidgetItem(QString::number(json["car_components_config"].toArray().size())));
+        ui->tableWidget->setItem(current_data,3,new QTableWidgetItem(QString::number(json["car_components_config"].toArray().size())));
+        int length = json["navigator_components_config"].toArray().size();
+        QJsonArray navigator = json["navigator_components_config"].toArray();
+        QString plugin = "";
+        for(int i = 0; i < length; i++){
+            QJsonObject x = navigator[i].toObject();
+            plugin += x["plugin_id"].toString() + " ";
+        }
+        ui->tableWidget->setItem(current_data,1,new QTableWidgetItem(plugin));
         QJsonObject map = json["map_config"].toObject();
         QJsonObject map_size = map["size"].toObject();
         QString sized = QString::number(map_size["width"].toInt()) + "*" + QString::number(map_size["height"].toInt());
-        ui->tableWidget->setItem(current_data,1,new QTableWidgetItem(sized));
+        ui->tableWidget->setItem(current_data,2,new QTableWidgetItem(sized));
         if(AXIS_MAX_Y < map_size["width"].toInt() * map_size["height"].toInt()){
             AXIS_MAX_Y = map_size["width"].toInt() * map_size["height"].toInt();
 //            AXIS_MAX_X = map_size["width"].toInt() * map_size["height"].toInt()*2;
@@ -104,8 +114,8 @@ void StatisticsWidget::wsOnMessage(const QString &msg)
     }
     point_list[temp].push_back(QPointF(json["frame_cnt"].toInt(),json["light_grid"].toInt()));
     line_list[temp]->append(QPointF(json["frame_cnt"].toInt(),json["light_grid"].toInt()));
-    ui->tableWidget->setItem(temp, 3, new QTableWidgetItem(QString::number(json["frame_cnt"].toInt())));
-    ui->tableWidget->setItem(temp, 4, new QTableWidgetItem(QString::number(json["light_grid"].toInt())));
+    ui->tableWidget->setItem(temp, 4, new QTableWidgetItem(QString::number(json["frame_cnt"].toInt())));
+    ui->tableWidget->setItem(temp, 5, new QTableWidgetItem(QString::number(json["light_grid"].toInt())));
 //    ui->horizontalLayout->removeWidget(chartView);
 //    chartView->repaint();
 //    update();
@@ -131,6 +141,9 @@ void StatisticsWidget::on_stop_button_clicked()
 
 void StatisticsWidget::on_begin_button_2_clicked()
 {
+    ui->begin_button_2->hide();
+    ui->begin_button->show();
+    ui->stop_button->show();
     config_data = config_ui->get_config_data();
     line_name_node = config_ui->get_config_data_flag();
     initial_data(config_data);
