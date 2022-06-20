@@ -15,9 +15,12 @@ StatisticsWidget::StatisticsWidget(const QString &ws_url,QWidget *parent) :
         connect(ws_socket_, &QWebSocket::textMessageReceived, this, &StatisticsWidget::wsOnMessage);
     });
     ui->horizontalLayout->addWidget(config_ui = new StatisticsConfigWidget());
+    m_axisX = new QValueAxis();
+    m_axisY = new QValueAxis();
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     chartView = new QChartView(this);
     mChart = new QChart();
+    chartView->hide();
 }
 
 StatisticsWidget::~StatisticsWidget() {
@@ -26,7 +29,12 @@ StatisticsWidget::~StatisticsWidget() {
 }
 
 void StatisticsWidget::initial_data(std::vector<QJsonObject> json_list) {
-    line_list = std::vector<QLineSeries> (json_list.size());
+    line_list = std::vector<QLineSeries*> (json_list.size());
+    for(int i = 0; i <json_list.size(); i++){
+        line_list[i] = new QLineSeries();
+        line_list[i]->setPointsVisible(true);
+    }
+    point_list = std::vector<std::vector<QPointF>> (json_list.size());
     //qDebug()<<json_list.size();
     ui->tableWidget->setRowCount(json_list.size());
     ui->tableWidget->setColumnCount(5);
@@ -36,14 +44,20 @@ void StatisticsWidget::initial_data(std::vector<QJsonObject> json_list) {
     for(std::size_t i = 0; i < json_list.size(); i++){
         QJsonObject json = json_list[i];
         int current_data = line_name_node[json["auth_token"].toString()];
-//        qDebug()<<current_data;
-        line_list[i].setName("实验"+QString::number(current_data));
+//        qDebug()<<json["auth_token"].toString();
+        line_list[i]->setName("实验"+QString::number(current_data));
 //        line_name_node.insert(json["plugin_id"].toString(),i);
         ui->tableWidget->setItem(current_data,0,new QTableWidgetItem("实验"+QString::number(current_data)));
-        ui->tableWidget->setItem(current_data,2,new QTableWidgetItem(QString::number(json["car_components_comfig"].toArray().size())));
-        QJsonObject map_size = json["map_config"].toObject();
-        QString sized = map_size["width"].toString() + "*" + map_size["height"].toString();
+        ui->tableWidget->setItem(current_data,2,new QTableWidgetItem(QString::number(json["car_components_config"].toArray().size())));
+        QJsonObject map = json["map_config"].toObject();
+        QJsonObject map_size = map["size"].toObject();
+        QString sized = QString::number(map_size["width"].toInt()) + "*" + QString::number(map_size["height"].toInt());
         ui->tableWidget->setItem(current_data,1,new QTableWidgetItem(sized));
+        if(AXIS_MAX_Y < map_size["width"].toInt() * map_size["height"].toInt()){
+            AXIS_MAX_Y = map_size["width"].toInt() * map_size["height"].toInt();
+//            AXIS_MAX_X = map_size["width"].toInt() * map_size["height"].toInt()*2;
+        }
+//        qDebug() << map_size["width"].toInt() * map_size["height"].toInt();
     }
 }
 
@@ -51,21 +65,20 @@ void StatisticsWidget::paint_chart()
 {
 
     //mChart->removeAllSeries();
-    QValueAxis *m_axisX = new QValueAxis();
-    QValueAxis *m_axisY = new QValueAxis();
-    m_axisX->setMin(0);
-    m_axisY->setMin(0);
-    m_axisX->setMax(200);
-    m_axisY->setMax(200);
-    mChart->addAxis(m_axisX,Qt::AlignLeft);
-    mChart->addAxis(m_axisY,Qt::AlignBottom);
-    for(auto &temp: line_list){
-        temp.setPointsVisible();
-        mChart->addSeries(&temp);
-        temp.attachAxis(m_axisX);
-        temp.attachAxis(m_axisY);
+
+    m_axisX->setMin(AXIS_MIN_X);
+    m_axisY->setMin(AXIS_MIN_Y);
+    m_axisX->setMax(AXIS_MAX_X);
+    m_axisY->setMax(AXIS_MAX_Y);
+    mChart->addAxis(m_axisX,Qt::AlignBottom);
+    mChart->addAxis(m_axisY,Qt::AlignLeft);
+    for(int i = 0; i < line_list.size(); i++){
+        mChart->addSeries(line_list[i]);
+        line_list[i]->attachAxis(m_axisX);
+        line_list[i]->attachAxis(m_axisY);
     }
-    mChart->createDefaultAxes();
+//    mChart->createDefaultAxes();
+
     mChart->setAnimationOptions(QChart::SeriesAnimations);
     mChart->setTheme(QChart::ChartThemeDark);
     mChart->setTitle("统计图表");
@@ -81,12 +94,21 @@ void StatisticsWidget::wsOnMessage(const QString &msg)
     QJsonObject json = jsonDocument.object();
 //    qDebug()<<msg;
     int temp  = line_name_node[json["auth_token"].toString()];
-    line_list[temp].append(QPointF(json["frame_cnt"].toInt(),json["light_grid"].toInt()));
+    if(AXIS_MAX_X < json["frame_cnt"].toInt()){
+//        line_list[temp]->remove(0);
+//        mChart->axisX()->setMin(json["frame_cnt"].toInt()-AXIS_MIN_X);
+        mChart->axisX()->setMax(json["frame_cnt"].toInt());
+//        for(int i = 0; i < point_list[temp].size(); i++){
+//            line_list[temp].append(QPointF(point_list[temp].at(i).x()-1,point_list[temp].at(i).y()));
+//        }
+    }
+    point_list[temp].push_back(QPointF(json["frame_cnt"].toInt(),json["light_grid"].toInt()));
+    line_list[temp]->append(QPointF(json["frame_cnt"].toInt(),json["light_grid"].toInt()));
     ui->tableWidget->setItem(temp, 3, new QTableWidgetItem(QString::number(json["frame_cnt"].toInt())));
     ui->tableWidget->setItem(temp, 4, new QTableWidgetItem(QString::number(json["light_grid"].toInt())));
 //    ui->horizontalLayout->removeWidget(chartView);
 //    chartView->repaint();
-    update();
+//    update();
 }
 
 void StatisticsWidget::on_begin_button_clicked()
@@ -95,8 +117,7 @@ void StatisticsWidget::on_begin_button_clicked()
 //    json.insert("statistics_begin",true);
     ui->horizontalLayout->removeWidget(config_ui);
     paint_chart();
-
-
+    chartView->show();
     ws_socket_->sendTextMessage("S");
 }
 
@@ -105,7 +126,7 @@ void StatisticsWidget::on_stop_button_clicked()
 //    QJsonObject json;
 //    json.insert("statistics_begin",false);
 
-    ws_socket_->sendTextMessage("P");
+    ws_socket_->sendTextMessage("E");
 }
 
 void StatisticsWidget::on_begin_button_2_clicked()

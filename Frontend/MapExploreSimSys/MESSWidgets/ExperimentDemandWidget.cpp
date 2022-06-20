@@ -2,6 +2,7 @@
 #include "ui_ExperimentDemandWidget.h"
 
 #include "utils.h"
+#include "da_utils.h"
 #include "server_config.h"
 #include "backend_config.h"
 #include "RenderOrder.h"
@@ -91,13 +92,17 @@ void ExperimentDemandWidget::flushAndShow() {
         {},
         [this](const QString &resp) {
             const auto json_bytes = resp.toUtf8();
-            std::vector<backend_def::Config> backend_configs;
+            RD rd;
+            backend_def::RunningExperimentsData backend_configs;
             try {
-                xpack::json::decode(json_bytes.toStdString(), backend_configs);
+                xpack::json::decode(json_bytes.toStdString(), rd);
+                rd.data.decode(backend_configs);
             }  catch (const std::exception &e) {
                 qDebug() << e.what();
             }
-            for (const auto &e : backend_configs) {
+            for (const auto &kv : backend_configs.experiments) {
+                const auto &e = kv.second.init_config;
+                qDebug() << e.auth_token.c_str() << e.view_config.ws_url.port;
                 ports_of_running_[e.auth_token.c_str()] = e.view_config.ws_url.port;
             }
             auto json_doc = QJsonDocument::fromJson(json_bytes);
@@ -117,21 +122,21 @@ void ExperimentDemandWidget::flushAndShow() {
             QJsonArray experiments;
             for (const auto &e : arr) {
                 auto obj = e.toObject();
-                auto rendering_data = QString(syncGetFile(obj["rendering_orders_path"].toString()));
-                auto lines = rendering_data.split("\n");
-                QJsonArray rendering_orders;
-                for (const auto &line : lines) {
-                    if (line.isEmpty()) continue;
-                    RenderOrder order;
-                    order.fromJson(QJsonDocument::fromJson(line.toUtf8()).object());
-                    rendering_orders.push_back(order.stringify().c_str());
-                }
+                // auto rendering_data = QString(syncGetFile(obj["rendering_orders_path"].toString()));
+                // auto lines = rendering_data.split("\n");
+                // QJsonArray rendering_orders;
+                // for (const auto &line : lines) {
+                //    if (line.isEmpty()) continue;
+                //    RenderOrder order;
+                //    order.fromJson(QJsonDocument::fromJson(line.toUtf8()).object());
+                //    rendering_orders.push_back(order.stringify().c_str());
+                //}
                 QJsonObject hufri_json;
                 hufri_json["ID"] = obj["user_id"].toString();
                 hufri_json["开始时间"] = QDateTime::fromTime_t(obj["started_at"].toInt()).toString();
                 hufri_json["结束时间"] = QDateTime::fromTime_t(obj["stoped_at"].toInt()).toString();
                 hufri_json["配置"] = QJsonDocument::fromJson(syncGetFile(obj["config_path"].toString())).object();
-                hufri_json["录制"] = rendering_orders;
+                // hufri_json["录制"] = rendering_orders;
                 current_auth_tokens_of_his_expr.push_back(hufri_json["ID"].toString());
                 experiments.push_back(hufri_json);
             }
@@ -220,7 +225,7 @@ void ExperimentDemandWidget::on_pushButtonPlaybackExper_clicked() {
         ++cnt;
     }
 
-    ui->tabWidgetDisplay->addTab(w, token);
+    ui->tabWidgetDisplay->addTab(w, QString("回放:%1").arg(token));
     ui->tabWidgetDisplay->setCurrentWidget(w);
     ui->pushButtonPlaybackExper->setText("开始");
     play.running = false;
@@ -276,10 +281,15 @@ void ExperimentDemandWidget::on_pushButtonLiveExper_clicked() {
                 .arg(VIEW_COMPONENT_SERVER_IP)
                 .arg(ports_of_running_[token])
         );
+        ui->tabWidgetDisplay->addTab(r.display_widget, QString("直播(%1)").arg(token));
         ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);
     } else {
         auto &r = running_live_[token];
         Q_ASSERT(r.display_widget);
         ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);
     }
+}
+
+void ExperimentDemandWidget::on_pushButtonLiveExperFlush_clicked() {
+    flushAndShow();
 }

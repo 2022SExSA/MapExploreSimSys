@@ -39,7 +39,7 @@
      <item row="0" column="3">
       <widget class="QPushButton" name="stop_button">
        <property name="text">
-        <string>暂停</string>
+        <string>结束</string>
        </property>
       </widget>
      </item>

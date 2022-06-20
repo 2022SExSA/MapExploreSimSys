@@ -121,7 +121,7 @@ void MESSSimulationWidget::on_pushButtonStop_clicked() {
                     QMessageBox::warning(this, "", data.msg.c_str());
                     return;
                 }
-                QMessageBox::information(this, "提示", "已自动保存自服务器");
+                QMessageBox::information(this, "提示", "已自动保存至服务器");
             },
             [this](const QString &err) {
                 QMessageBox::warning(this, "", err);

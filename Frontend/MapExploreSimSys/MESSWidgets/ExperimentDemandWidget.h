@@ -23,14 +23,11 @@ public:
     void flushAndShow();
 private slots:
     void on_pushButtonPlaybackExper_clicked();
-
     void on_pushButtonPlaybackExperFlush_clicked();
-
     void on_spinBox_valueChanged(int arg1);
-
     void on_tabWidgetDisplay_tabCloseRequested(int index);
-
     void on_pushButtonLiveExper_clicked();
+    void on_pushButtonLiveExperFlush_clicked();
 
 private:
     struct PlaybackCtx {

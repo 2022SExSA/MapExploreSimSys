@@ -64,9 +64,7 @@ void ObjectEditWidget::setData(const ObjectData & data) {
     for (auto iter = data.begin(); iter != data.end(); ++iter) {
         const auto &k = iter.key();
         const auto &v = iter.value();
-        qDebug() << __LINE__;
         (*m_config)[k].entryWidget->getEditWidget();
-        qDebug() << __LINE__;
         (*m_config)[k].setValueCallback((*m_config)[k].entryWidget->getEditWidget(), v);
     }
 }

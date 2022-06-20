@@ -102,5 +102,18 @@ struct Config : public ComponentConfig {
     );
 };
 
+struct RunningExperimentsData {
+    struct ExperimentRuntimeData {
+        int state{0};
+        Config init_config;
+
+        XPACK(O(state, init_config));
+    };
+
+    std::map<std::string, ExperimentRuntimeData> experiments; // key = auth_token
+
+    XPACK(O(experiments));
+};
+
 } // namespace backend_def
 #endif // BACKEND_CONFIG_H

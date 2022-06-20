@@ -180,7 +180,6 @@ public:
             res.rx() = m_area.x() + (idx % m_xn) * m_cellWidth;
             res.ry() = m_area.y() + (idx / m_xn) * m_cellHeight;
         } while(m_helper.find(idx) != m_helper.end() && m_helper.size() == std::size_t(m_xn * m_yn));
-        qDebug() << idx;
         m_helper.insert(idx);
         return res;
     }
