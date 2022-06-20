@@ -169,7 +169,7 @@ void ExperimentDemandWidget::on_pushButtonPlaybackExper_clicked() {
     if (playback_.count(token)) {
         auto &p = playback_[token];
         if (p.running) {
-            p.flusher->stop();
+            p.flusher->start(p.delta_ms);
             p.running = false;
             ui->pushButtonPlaybackExper->setText("开始");
         } else {
@@ -225,7 +225,9 @@ void ExperimentDemandWidget::on_pushButtonPlaybackExper_clicked() {
         ++cnt;
     }
 
-    ui->tabWidgetDisplay->addTab(w, QString("回放:%1").arg(token));
+    w->setProperty("type", "H"); // History
+    w->setProperty("token", token);
+    ui->tabWidgetDisplay->addTab(w, QString("回放(ID:%1)").arg(token));
     ui->tabWidgetDisplay->setCurrentWidget(w);
     ui->pushButtonPlaybackExper->setText("开始");
     play.running = false;
@@ -235,7 +237,8 @@ void ExperimentDemandWidget::on_pushButtonPlaybackExper_clicked() {
             w->update();
             return;
         }
-        w->display(o[play.curr_index++]);
+        w->display(o[play.curr_index]);
+        if (play.running) ++play.curr_index;
         bool ok;
         int i = ui->lineEditHisExperToken->text().split('#')[0].toInt(&ok); Q_ASSERT(ok);
         auto current_token = current_auth_tokens_of_his_expr[i];
@@ -263,7 +266,17 @@ void ExperimentDemandWidget::on_spinBox_valueChanged(int new_val) {
 void ExperimentDemandWidget::on_tabWidgetDisplay_tabCloseRequested(int index) {
     QWidget *item_widget = ui->tabWidgetDisplay->widget(index);
     if (item_widget) {
-        item_widget->close();
+        Q_ASSERT(item_widget->property("type").type() == QVariant::String);
+        Q_ASSERT(item_widget->property("token").type() == QVariant::String);
+        auto type = item_widget->property("type").toString();
+        auto token = item_widget->property("token").toString();
+        if (type == "R") {
+            running_live_[token].clear();
+            running_live_.erase(token);
+        } else if (type == "H") {
+            playback_[token].clear();
+            playback_.erase(token);
+        }
         item_widget->deleteLater();
     }
 }
@@ -281,7 +294,9 @@ void ExperimentDemandWidget::on_pushButtonLiveExper_clicked() {
                 .arg(VIEW_COMPONENT_SERVER_IP)
                 .arg(ports_of_running_[token])
         );
-        ui->tabWidgetDisplay->addTab(r.display_widget, QString("直播(%1)").arg(token));
+        r.display_widget->setProperty("type", "R"); // Running: shit code
+        r.display_widget->setProperty("token", token); // Token
+        ui->tabWidgetDisplay->addTab(r.display_widget, QString("直播(ID:%1)").arg(token));
         ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);
     } else {
         auto &r = running_live_[token];
@@ -292,4 +307,15 @@ void ExperimentDemandWidget::on_pushButtonLiveExper_clicked() {
 
 void ExperimentDemandWidget::on_pushButtonLiveExperFlush_clicked() {
     flushAndShow();
+}
+
+// Runtime Context
+void ExperimentDemandWidget::PlaybackCtx::clear() {
+    this->flusher->stop();
+    this->flusher->deleteLater();
+    this->display_widget->close();
+}
+
+void ExperimentDemandWidget::RuningLiveCtx::clear() {
+    this->display_widget->close();
 }

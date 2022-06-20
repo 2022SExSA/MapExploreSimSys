@@ -39,11 +39,15 @@ private:
         int delta_ms = 1000;
         QString token;
         std::vector<std::vector<RenderOrder>> render_orders;
+
+        void clear();
     };
 
     struct RuningLiveCtx {
         QString token;
         MESSDisplayWidget *display_widget{nullptr};
+
+        void clear();
     };
 
     Ui::ExperimentDemandWidget *ui;

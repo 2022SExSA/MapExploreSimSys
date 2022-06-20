@@ -4,6 +4,7 @@
 #include "da_utils.h"
 
 #include <QMessageBox>
+#include <QCryptographicHash>
 
 LoginWidget::LoginWidget(QWidget *parent)
     : QWidget(parent)
@@ -22,7 +23,10 @@ void LoginWidget::setAfterLogin(const std::function<void (UserType, const std::s
 
 void LoginWidget::on_LoginPushButton_clicked() {
     QString id = ui->IDLineEdit->text();
-    QString password = ui->PasswordLineEdit->text();
+    QString primal_password = ui->PasswordLineEdit->text();
+    // 对密码进行加密处理(使用Sha1, 一定程度上提高安全性)
+    QByteArray bytes_password = QCryptographicHash::hash(primal_password.toLatin1(), QCryptographicHash::Sha1);
+    QString password = bytes_password.toHex();
     bool userType = ui->UserRadioButton->isChecked();
     bool adminType = ui->UserRadioButton->isChecked(); Q_UNUSED(adminType);
     RD rd;

@@ -30,5 +30,6 @@ private:
     bool Updating = true;
     int length;
     std::string token;
+    QString lastPwd;
 };
 #endif // !USERMGRWIDGET_H

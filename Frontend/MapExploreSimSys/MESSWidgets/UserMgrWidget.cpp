@@ -1,10 +1,11 @@
 #include "UserMgrWidget.h"
 #include "ui_UserMgrWidget.h"
 #include "da_utils.h"
-#include <QMessageBox>
-#include <QVector>
-#include <QStringList>
 #include <QDebug>
+#include <QVector>
+#include <QMessageBox>
+#include <QStringList>
+#include <QCryptographicHash>
 
 UserMgrWidget::UserMgrWidget(QWidget *parent)
     : QWidget(parent)
@@ -35,7 +36,7 @@ void UserMgrWidget::showUserInfo() {
     ui->tableWidget->setRowCount(0);
     ui->tableWidget->setColumnCount(4);
     ui->tableWidget->setHorizontalHeaderItem(0, new QTableWidgetItem("id"));
-    ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("密码"));
+    ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("密码(加密后)"));
     ui->tableWidget->setHorizontalHeaderItem(2, new QTableWidgetItem("姓名"));
     ui->tableWidget->setHorizontalHeaderItem(3, new QTableWidgetItem("类型"));
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
@@ -73,7 +74,7 @@ void UserMgrWidget::on_SearchPushButton_3_clicked() {
     ui->tableWidget->setRowCount(0);
     ui->tableWidget->setColumnCount(4);
     ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("id"));
-    ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("密码"));
+    ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("密码(加密后)"));
     ui->tableWidget->setHorizontalHeaderItem(2,new QTableWidgetItem("姓名"));
     ui->tableWidget->setHorizontalHeaderItem(3,new QTableWidgetItem("类型"));
 
@@ -83,12 +84,15 @@ void UserMgrWidget::on_SearchPushButton_3_clicked() {
         ui->tableWidget->setItem(i, 1, new QTableWidgetItem(userInfos[i].password.c_str()));
         ui->tableWidget->setItem(i, 2, new QTableWidgetItem(userInfos[i].name.c_str()));
         ui->tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(userInfos[i].type)));
+        ui->tableWidget->item(i,0)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        ui->tableWidget->item(i,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        ui->tableWidget->item(i,2)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        ui->tableWidget->item(i,3)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
     }
 }
 
 
-void UserMgrWidget::on_pushButton_3_clicked()
-{
+void UserMgrWidget::on_pushButton_3_clicked() {
     ui->deletePushButton_3->hide();
     ui->updatePushButton_3->hide();
     if(Adding == true)
@@ -108,14 +112,17 @@ void UserMgrWidget::on_pushButton_3_clicked()
         if(standardButton == QMessageBox::Yes) {
             UserInfo userInfo;
             userInfo.id = ui->tableWidget->item(ui->tableWidget->rowCount()-1,0)->text().toStdString();
-            userInfo.password = ui->tableWidget->item(ui->tableWidget->rowCount()-1,1)->text().toStdString();
+            userInfo.password = QCryptographicHash::hash( // Sha1加密
+                          ui->tableWidget->item(ui->tableWidget->rowCount()-1,1)->text().toLatin1(),
+                          QCryptographicHash::Sha1).toHex().toStdString();
             userInfo.name = ui->tableWidget->item(ui->tableWidget->rowCount()-1,2)->text().toStdString();
             userInfo.type = ui->tableWidget->item(ui->tableWidget->rowCount()-1,3)->text().toInt();
 
             RD rd;
             InsertUser(userInfo, rd);
             if(rd.code == 0) {
-                ui->SearchPushButton_3->setDisabled(!true);
+                ui->SearchPushButton_3->setDisabled(false);
+                ui->tableWidget->item(ui->tableWidget->rowCount()-1,1)->setText(userInfo.password.c_str());
                 ui->tableWidget->item(ui->tableWidget->rowCount()-1,0)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                 ui->tableWidget->item(ui->tableWidget->rowCount()-1,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                 ui->tableWidget->item(ui->tableWidget->rowCount()-1,2)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
@@ -164,7 +171,6 @@ void UserMgrWidget::on_deletePushButton_3_clicked(){
 void UserMgrWidget::on_updatePushButton_3_clicked()
 {
     if(Updating == true) {
-
         int length = ui->tableWidget->currentRow();
         this->length = length;
         if(length >= 0 && length < ui->tableWidget->rowCount())
@@ -173,7 +179,8 @@ void UserMgrWidget::on_updatePushButton_3_clicked()
             ui->deletePushButton_3->hide();
             ui->pushButton_3->hide();
             ui->updatePushButton_3->setText("保存");
-            ui->tableWidget->item(length,0)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+            lastPwd = ui->tableWidget->item(this->length,1)->text();
+            // 不允许修改ID // ui->tableWidget->item(length,0)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             ui->tableWidget->item(length,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             ui->tableWidget->item(length,2)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
             ui->tableWidget->item(length,3)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
@@ -188,7 +195,13 @@ void UserMgrWidget::on_updatePushButton_3_clicked()
         RD rd;
         UserInfo userInfo;
         userInfo.id = ui->tableWidget->item(this->length,0)->text().toStdString();
-        userInfo.password = ui->tableWidget->item(this->length,1)->text().toStdString();
+        if (lastPwd != ui->tableWidget->item(this->length,1)->text()) {
+            userInfo.password = QCryptographicHash::hash( // Sha1加密
+                  ui->tableWidget->item(this->length,1)->text().toLatin1(),
+                  QCryptographicHash::Sha1).toHex().toStdString();
+        } else {
+            userInfo.password = ui->tableWidget->item(this->length,1)->text().toStdString();
+        }
         userInfo.name = ui->tableWidget->item(this->length,2)->text().toStdString();
         userInfo.type = ui->tableWidget->item(this->length,3)->text().toInt();
 
@@ -200,6 +213,7 @@ void UserMgrWidget::on_updatePushButton_3_clicked()
             Updating = true;
             ui->deletePushButton_3->show();
             ui->pushButton_3->show();
+            ui->tableWidget->item(this->length,1)->setText(userInfo.password.c_str());
             ui->tableWidget->item(length,0)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
             ui->tableWidget->item(length,1)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
             ui->tableWidget->item(length,2)->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);

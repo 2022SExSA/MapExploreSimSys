@@ -2,8 +2,11 @@
 #include "ui_RegisterWidget.h"
 #include "LoginWidget.h"
 #include "da_utils.h"
+#include <QString>
+#include <QByteArray>
 #include <QMessageBox>
 #include <QLineEdit>
+#include <QCryptographicHash>
 
 RegisterWidget::RegisterWidget(QWidget *parent) :
     QWidget(parent),
@@ -41,7 +44,10 @@ void RegisterWidget::on_ConfirmPushbutton_clicked() {
                 UserInfo u;
                 u.id = ui->UserLineEdit->text().toStdString();
                 u.name = ui->NameLineEdit->text().toStdString();
-                u.password = ui->PasswordLineEdit->text().toStdString();
+                u.password =
+                        QCryptographicHash::hash( // 利用Sha1加密，一定程度上提高安全性
+                            ui->PasswordLineEdit->text().toLatin1(),
+                            QCryptographicHash::Sha1).toHex().toStdString();
                 u.type = User;
                 AddUser(u, rd);
                 if (rd.code == 0) {
