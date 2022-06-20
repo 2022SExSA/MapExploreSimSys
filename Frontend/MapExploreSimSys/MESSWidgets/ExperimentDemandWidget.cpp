@@ -271,7 +271,6 @@ void ExperimentDemandWidget::on_tabWidgetDisplay_tabCloseRequested(int index) {
 void ExperimentDemandWidget::on_pushButtonLiveExper_clicked() {
     auto token = ui->lineEditRunExperToken->text();
     if (!running_live_.count(token)) { // not exists
-        qDebug() << token <<  __FILE__ <<__LINE__;
         auto &r = running_live_[token];
         r.display_widget = new MESSDisplayWidget;
         r.display_widget->start(
@@ -285,7 +284,6 @@ void ExperimentDemandWidget::on_pushButtonLiveExper_clicked() {
         ui->tabWidgetDisplay->addTab(r.display_widget, QString("直播(%1)").arg(token));
         ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);
     } else {
-        qDebug() << __FILE__ <<__LINE__;
         auto &r = running_live_[token];
         Q_ASSERT(r.display_widget);
         ui->tabWidgetDisplay->setCurrentWidget(r.display_widget);

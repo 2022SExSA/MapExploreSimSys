@@ -14,7 +14,6 @@ UserMgrWidget::UserMgrWidget(QWidget *parent)
     text.append("用户id");
     text.append("用户姓名");
     text.append("类别");
-    qDebug() << __FILE__ << __LINE__;
     ui->TypeComboBox->addItems(text); qDebug() << __FILE__ << __LINE__;
     showUserInfo(); qDebug() << __FILE__ << __LINE__;
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows); //设置选择行为，以行为单位
@@ -27,30 +26,20 @@ UserMgrWidget::~UserMgrWidget() {
 
 void UserMgrWidget::showUserInfo() {
     QVector<UserInfo> userInfos;
-            qDebug() << __FILE__ << __LINE__;
     RD rd;
-            qDebug() << __FILE__ << __LINE__;
     userInfos = GetAllUserInfo(rd);
-            qDebug() << __FILE__ << __LINE__;
     if (rd.code != 0) {
         QMessageBox::warning(this, "错误", "获取用户信息失败");
         return;
     }
-        qDebug() << __FILE__ << __LINE__;
     ui->tableWidget->setRowCount(0);
-        qDebug() << __FILE__ << __LINE__;
     ui->tableWidget->setColumnCount(4);
-        qDebug() << __FILE__ << __LINE__;
     ui->tableWidget->setHorizontalHeaderItem(0, new QTableWidgetItem("id"));
     ui->tableWidget->setHorizontalHeaderItem(1, new QTableWidgetItem("密码"));
     ui->tableWidget->setHorizontalHeaderItem(2, new QTableWidgetItem("姓名"));
     ui->tableWidget->setHorizontalHeaderItem(3, new QTableWidgetItem("类型"));
-    qDebug() << __FILE__ << __LINE__;
-
     ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
-    qDebug() << __FILE__ << __LINE__;
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    qDebug() << __FILE__ << __LINE__;
 
     for(int i = 0;i<userInfos.size();i++) {
         ui->tableWidget->insertRow(i);
@@ -109,24 +98,14 @@ void UserMgrWidget::on_pushButton_3_clicked()
         ui->pushButton_3->setText("保存");
         ui->tableWidget->insertRow(ui->tableWidget->rowCount());
 
-       // QString id;
-       // QString password;
-        //QString name;
-        //QString type;
-
-
         ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 0, new QTableWidgetItem(""));
         ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 1, new QTableWidgetItem(""));
         ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 2, new QTableWidgetItem(""));
         ui->tableWidget->setItem(ui->tableWidget->rowCount()-1, 3, new QTableWidgetItem(""));
 
-
-    }
-    else
-    {
+    } else {
         QMessageBox::StandardButton standardButton = QMessageBox::question(this,"提示","是否保存？");
-        if(standardButton == QMessageBox::Yes)
-        {
+        if(standardButton == QMessageBox::Yes) {
             UserInfo userInfo;
             userInfo.id = ui->tableWidget->item(ui->tableWidget->rowCount()-1,0)->text().toStdString();
             userInfo.password = ui->tableWidget->item(ui->tableWidget->rowCount()-1,1)->text().toStdString();
@@ -148,24 +127,18 @@ void UserMgrWidget::on_pushButton_3_clicked()
                 ui->deletePushButton_3->show();
                 ui->updatePushButton_3->show();
             }
-            else
-            {
+            else {
                 QMessageBox::information(this, "提示", QString("保存失败: ") + rd.msg.c_str());
             }
-
-
         }
-
     }
 }
 
 
-void UserMgrWidget::on_deletePushButton_3_clicked()
-{
+void UserMgrWidget::on_deletePushButton_3_clicked(){
     QMessageBox::StandardButton standardButton = QMessageBox::question(this,"提示","是否删除？");
     if(standardButton == QMessageBox::Yes)
     {
-
         int length = ui->tableWidget->currentRow();
         if(length >= 0&&length < ui->tableWidget->rowCount() )
         {
