@@ -1,6 +1,7 @@
 #include <fstream>
 #include <thread>
 
+#include "ProjectConfig.h"
 #include "config.h"
 #include "pg/pgfwd.h"
 #include "utils.h"
@@ -33,15 +34,15 @@ public:
 
         PGZXB_DEBUG_ASSERT(config_.navigator_components_config.size() > 0);
 
-        launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/View", xpack::json::encode(config_.view_config));
+        launch_component(ProjectConfig::get_instance().component_exe_root_path + "View", xpack::json::encode(config_.view_config));
 
         for (const auto &car_config : config_.car_components_config) {
             // FIXME: Bad smell: hardcode
-            launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Car", xpack::json::encode(car_config));
+            launch_component(ProjectConfig::get_instance().component_exe_root_path + "Car", xpack::json::encode(car_config));
         }
         for (const auto &navi_config : config_.navigator_components_config) {
             // FIXME: Bad smell: hardcode
-            launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Navigator", xpack::json::encode(navi_config));
+            launch_component(ProjectConfig::get_instance().component_exe_root_path + "Navigator", xpack::json::encode(navi_config));
         }
 
         // Better

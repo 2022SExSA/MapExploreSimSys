@@ -32,3 +32,7 @@ add_subdirectory(Server/SimulationServer)
 file(GLOB MESSBASE_SRC_FILES Base/*.cpp)
 add_library(MESSBase STATIC ${MESSBASE_SRC_FILES})
 target_link_libraries(MESSBase hiredis)
+
+# Generate default config file
+set(MESS_BACKEND_SOURCE_ROOT_PATH ${CMAKE_SOURCE_DIR})
+configure_file(Template/config.template.json ${MESS_BACKEND_SOURCE_ROOT_PATH}/default_config.json)

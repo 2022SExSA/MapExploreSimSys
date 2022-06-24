@@ -2,6 +2,7 @@
 #include <thread>
 #include <exception>
 
+#include "ProjectConfig.h"
 #include "Xpack/json.h"
 #include "fwd.h"
 #include "jwt-cpp/jwt.h"
@@ -14,10 +15,6 @@
 #include "frontend_config.h"
 
 MESS_LOG_MODULE("Simulation+Statistics Server");
-
-constexpr char CONTROLLER_EXE_PATH[] = "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Controller";
-constexpr char SQLITE_PATH[] = "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Server/SimulationServer/Experiments.sqlite3";
-constexpr char EX_CONFIG_PATH_PREFIX[] = "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Assets/";
 
 using namespace pg::messbase;
 
@@ -131,7 +128,7 @@ static void free_statistics_runtime(MESSContext &mess_ctx, const std::unique_ptr
     
             // Dump config
             auto json = xpack::json::encode(exper);
-            std::ofstream of(EX_CONFIG_PATH_PREFIX + e.config_path);
+            std::ofstream of(ProjectConfig::get_instance().assets_root_path + e.config_path);
             PGZXB_DEBUG_ASSERT(of);
             of << json;
 
@@ -147,14 +144,14 @@ static void free_statistics_runtime(MESSContext &mess_ctx, const std::unique_ptr
 }
 
 
-// For dumping data to sqlite
-static struct { void *db, *mess_ctx; } ctx;
-static void exit() {
+// // For dumping data to sqlite
+// static struct { void *db, *mess_ctx; } ctx;
+// static void exit() {
 
-};
+// };
 
 int main() {
-    auto db = DAO::create_sqlite_ins(SQLITE_PATH);
+    auto db = DAO::create_sqlite_ins(ProjectConfig::get_instance().experiment_db_url);
     hv::HttpService router;
     MESSContext mess_ctx;
 
@@ -172,11 +169,11 @@ int main() {
         // Trans to frontend-config
         Config config = frontend_def::default_trans_frontend_config_to_backend(config_from_frontend);
 
-        launch_component(CONTROLLER_EXE_PATH, xpack::json::encode(config));
+        launch_component(ProjectConfig::get_instance().component_exe_root_path + "Controller", xpack::json::encode(config));
 
         Json resp = Json::object();
-        resp["view_http_url"] = "http://192.168.111.148:" + std::to_string(config.view_config.ws_url.port);
-        resp["view_ws_url"]   = "ws://192.168.111.148:"   + std::to_string(config.view_config.ws_url.port);
+        resp["view_http_url"] = "http://" + ProjectConfig::get_instance().view_component_ip + ":" + std::to_string(config.view_config.ws_url.port);
+        resp["view_ws_url"]   = "ws://" + ProjectConfig::get_instance().view_component_ip + ":"   + std::to_string(config.view_config.ws_url.port);
         ctx->sendJson(make_response_json_data(0, resp));
         auto &exper = mess_ctx.experiments[config.auth_token];
         exper.board = Board::new_instance(config.auth_token, config.redis_board_ip, config.redis_board_port);
@@ -222,7 +219,7 @@ int main() {
  
         // Dump config
         auto json = xpack::json::encode(exper);
-        std::ofstream of(EX_CONFIG_PATH_PREFIX + e.config_path);
+        std::ofstream of(ProjectConfig::get_instance().assets_root_path + e.config_path);
         PGZXB_DEBUG_ASSERT(of);
         of << json;
 
@@ -253,7 +250,7 @@ int main() {
         return HTTP_STATUS_OK;
     });
 
-    router.document_root = EX_CONFIG_PATH_PREFIX;
+    router.document_root = ProjectConfig::get_instance().assets_root_path;
 
     // WebSocket Service
     hv::WebSocketService ws;
@@ -288,7 +285,7 @@ int main() {
                 auto &e = config_list[i];
                 // e.auth_token = e.auth_token + "_" + std::to_string(i); // [Mvto Frontend]Unique auth_token
                 Config config = frontend_def::default_trans_frontend_config_to_backend(e);
-                launch_component(CONTROLLER_EXE_PATH, xpack::json::encode(config));
+                launch_component(ProjectConfig::get_instance().component_exe_root_path + "Controller", xpack::json::encode(config));
                 auto &exper = mess_ctx.experiments[config.auth_token];
                 exper.board = Board::new_instance(config.auth_token, config.redis_board_ip, config.redis_board_port);
                 exper.init_config = std::move(config);

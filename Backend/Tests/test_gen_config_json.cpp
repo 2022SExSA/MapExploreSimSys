@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include "config.h"
+#include "ProjectConfig.h"
 
 PGTEST_CASE(gen_config_json) {
     using namespace pg::messbase;
@@ -19,14 +20,14 @@ PGTEST_CASE(gen_config_json) {
     comp_config.auth_token = "T";
 
     // For Redis
-    comp_config.redis_board_ip = "127.0.0.1";
+    comp_config.redis_board_ip = ProjectConfig::get_instance().redis_board_ip;
     comp_config.redis_board_port = 6379;
 
     // For RabbitMQ
-    comp_config.mq_host = "192.168.111.1";
-    comp_config.mq_port = 5672;
-    comp_config.mq_username = "pgzxb";
-    comp_config.mq_password = "pgzxb";
+    comp_config.mq_host = ProjectConfig::get_instance().rabbitmq_ip;
+    comp_config.mq_port = ProjectConfig::get_instance().rabbitmq_port;
+    comp_config.mq_username = ProjectConfig::get_instance().rabbitmq_username;
+    comp_config.mq_password = ProjectConfig::get_instance().rabbitmq_password;
     /* comp_config.mq_name = ""; */
 
     Config config;

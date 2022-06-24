@@ -54,3 +54,4 @@ build-*
 *.mess_show
 *.mess_config
 *.sqlite3
+default_config.json

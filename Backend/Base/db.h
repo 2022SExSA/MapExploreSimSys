@@ -25,6 +25,7 @@ struct Exeriment {
 
 class DAO {
 public:
+    virtual ~DAO() = default;
     virtual void try_create_db() = 0;
     virtual void add_experiment(const db_model::Exeriment &e) = 0;
     virtual std::vector<db_model::Exeriment> get_all_experiments() = 0;

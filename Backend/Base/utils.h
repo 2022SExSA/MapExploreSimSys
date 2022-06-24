@@ -5,6 +5,7 @@
 
 #include "fwd.h"
 #include "config.h"
+#include "ProjectConfig.h"
 #include "SimpleAmqpClient/Channel.h"
 
 #include <cstddef>
@@ -243,6 +244,8 @@ inline details::DeferHelper defer(const std::function<void()> &func) {
 }
 
 inline void launch_component(const std::string& file, const std::string &config_json) {
+    // NOTE: !!Bad code!! Only localhost
+    // FIXME: Support launch component on other host
     if (::fork() == 0) {
         MESS_LOG("Launching {0}", file);
         ::execlp(file.c_str(), file.c_str(), config_json.c_str(), NULL);
@@ -276,21 +279,21 @@ inline Json make_response_json_data(int err_code, const std::string &msg, const 
     return resp;
 }
 
-inline const char * get_navi_plugin_by_id(const std::string &id) {
+inline std::string get_navi_plugin_by_id(const std::string &id) {
     static const char *NAME_TABLE[4][2] = {
-        {"demo", "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_demo.so"},
-        {"A*",   "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_a_star.so"},
-        {"DFS",  "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_dfs.so"},
-        {"BFS",  "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/NaviPlugin/libmess_navi_plugin_bfs.so"},
+        {"demo", "libmess_navi_plugin_demo.so"},
+        {"A*",   "libmess_navi_plugin_a_star.so"},
+        {"DFS",  "libmess_navi_plugin_dfs.so"},
+        {"BFS",  "libmess_navi_plugin_bfs.so"},
     };
 
     for (const auto &e : NAME_TABLE) {
         if (id == e[0]) {
-            return e[1];
+            return ProjectConfig::get_instance().navi_plugin_so_root_path + e[1];
         }
     }
 
-    return nullptr;
+    return "";
 }
 
 short get_available_port();

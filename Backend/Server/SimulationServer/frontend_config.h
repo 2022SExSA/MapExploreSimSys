@@ -4,6 +4,7 @@
 #include "fwd.h"
 #include "utils.h"
 #include "config.h"
+#include "ProjectConfig.h"
 #include "Xpack/json.h"
 MESSBASE_NAMESPACE_START
 namespace frontend_def {
@@ -63,14 +64,14 @@ inline messbase::Config default_trans_frontend_config_to_backend(const Experimen
     comp_config.auth_token = frontend_config.auth_token;
 
     // For Redis
-    comp_config.redis_board_ip = "127.0.0.1";
-    comp_config.redis_board_port = 6379;
+    comp_config.redis_board_ip = ProjectConfig::get_instance().redis_board_ip;
+    comp_config.redis_board_port = ProjectConfig::get_instance().redis_board_port;
 
     // For RabbitMQ
-    comp_config.mq_host = "192.168.111.1";
-    comp_config.mq_port = 5672;
-    comp_config.mq_username = "pgzxb";
-    comp_config.mq_password = "pgzxb";
+    comp_config.mq_host = ProjectConfig::get_instance().rabbitmq_ip;
+    comp_config.mq_port = ProjectConfig::get_instance().rabbitmq_port;
+    comp_config.mq_username = ProjectConfig::get_instance().rabbitmq_username;
+    comp_config.mq_password = ProjectConfig::get_instance().rabbitmq_password;
     /* comp_config.mq_name = ""; */
 
     messbase::Config result;
@@ -114,7 +115,7 @@ inline messbase::Config default_trans_frontend_config_to_backend(const Experimen
     view_config.future_route_img  = {5, "future_route_grid.png"};
     view_config.car_img           = {4, "car.gif"};
     view_config.ws_url = {"", get_available_port()};
-    view_config.orders_saved_path = "/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Assets/";
+    view_config.orders_saved_path = ProjectConfig::get_instance().rendering_orders_save_path;
     view_config.orders_saved_path.append(view_config.auth_token).append(".mess_show");
     result.view_config = view_config;
 

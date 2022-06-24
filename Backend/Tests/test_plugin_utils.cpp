@@ -1,11 +1,15 @@
 #include <iostream>
 #include "pg/pgtest/pgtest.h"
+#include "ProjectConfig.h"
 #include "navigator_plugin_utils.h"
 
 using namespace pg::messbase;
 
 PGTEST_CASE(test_for_plugin_utils) {
-    Board::get_instance()->init("MESSAuthToken_1655364796", "127.0.0.1", 6379);
+    Board::get_instance()->init(
+        "MESSAuthToken_1655364796",
+        ProjectConfig::get_instance().redis_board_ip,
+        ProjectConfig::get_instance().redis_board_port);
 
     MESSNP_Position src, dest;
     MESSNP_PositionArray dest_pos_array;

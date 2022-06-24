@@ -2,6 +2,7 @@
 #include <iostream>
 #include <filesystem>
 
+#include "ProjectConfig.h"
 #include "utils.h"
 
 // Linux headers
@@ -20,7 +21,7 @@ int main() {
     ifs >> config_json;
 
     // FIXME: Bad smell, refused hardcode
-    launch_component("/home/pgzxb/Documents/DevWorkspace/2022SACourseWorkspace/MapExploreSimSys/Backend/Build/Components/Controller", config_json);
+    launch_component(ProjectConfig::get_instance().component_exe_root_path + "Controller", config_json);
 
     // Wait all children
     wait(nullptr);
