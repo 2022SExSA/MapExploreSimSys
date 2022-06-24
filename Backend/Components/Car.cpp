@@ -33,28 +33,34 @@ private:
             exit(0);
         }
 
-        if (op.value().op == "go-next" && !(op.value() == car->last_op_)) {
+        if (op.value().op == "go-next") {
             auto *board = Board::get_instance();
             auto pos = board->get_next_routing_position(car->config_.mq_name);
             if (pos.has_value()) {
-                int x = pos.value().x;
-                int y = pos.value().y;
-                if (x < 0 || y < 0) return "";
-                // Update pos of this car
-                [[maybe_unused]] auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
-                MESS_ERR_IF(!ok, "Car {0} move to failed", car->config_.mq_name);
-                
-                // Light grid on map
-                int start_x = std::max(x - car->config_.light_r, 0);
-                int start_y = std::max(y - car->config_.light_r, 0);
-                int end_x = x + car->config_.light_r;
-                int end_y = y + car->config_.light_r;
-                for (int c = start_x; c <= end_x; ++c) {
-                    for (int r = start_y; r <= end_y; ++r) {
-                        board->set_grid_of_map(r, c, MAP_GRID_RAW_FLAG);
+                if (board->try_lock_grid(car->config_.mq_name, pos->y, pos->x)) {
+                    int x = pos.value().x;
+                    int y = pos.value().y;
+                    if (x < 0 || y < 0) return "";
+                    // Update pos of this car
+                    [[maybe_unused]] auto ok = board->set_position_of_car(car->config_.mq_name, {x, y});
+                    board->unlock_grid(car->config_.mq_name, car->last_r, car->last_c);
+                    car->last_r = y;
+                    car->last_c = x;
+                    MESS_ERR_IF(!ok, "Car {0} move to failed", car->config_.mq_name);
+                    // Light grid on map
+                    int start_x = std::max(x - car->config_.light_r, 0);
+                    int start_y = std::max(y - car->config_.light_r, 0);
+                    int end_x = x + car->config_.light_r;
+                    int end_y = y + car->config_.light_r;
+                    for (int c = start_x; c <= end_x; ++c) {
+                        for (int r = start_y; r <= end_y; ++r) {
+                            board->set_grid_of_map(r, c, MAP_GRID_RAW_FLAG);
+                        }
                     }
+                    car->last_op_ = op.value();
+                } else {
+                    board->clear_routlist(car->config_.mq_name); // Clear routlist
                 }
-                car->last_op_ = op.value();
             }
         }
         return "";
@@ -62,6 +68,7 @@ private:
 
     CarComponentConfig config_;
     Op last_op_;
+    int last_r{-1}, last_c{-1};
 };
 
 int main(int argc, char **argv) {

@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <dlfcn.h>
+#include <functional>
 #include <sstream>
 #include <unistd.h>
 MESSBASE_NAMESPACE_START
@@ -223,6 +224,23 @@ private:
     MQConfig config_;
     AmqpClient::Channel::ptr_t channel_;
 };
+
+namespace details {
+    struct DeferHelper {
+        const std::function<void()> &func{nullptr};
+        DeferHelper(const std::function<void()> &f) : func(f) {
+        }
+        ~DeferHelper() {
+            if (func) {
+                func();
+            }
+        }
+    };
+}
+
+inline details::DeferHelper defer(const std::function<void()> &func) {
+    return details::DeferHelper(func);
+}
 
 inline void launch_component(const std::string& file, const std::string &config_json) {
     if (::fork() == 0) {

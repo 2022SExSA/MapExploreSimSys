@@ -58,6 +58,7 @@ constexpr char CAR_POSITION_NAME_PREFIX[] = "CarPosition@";
 
 constexpr char ROUTLIST_NAME_FROMAT[]     = "CarRoutList@{0}"; // CarRoutList@Car001
 constexpr char CAR_POSITION_NAME_FORMAT[] = "CarPosition@{0}"; // CarPosition@@Car001
+constexpr char MAP_GRID_LOCK_NAME_FORMAT[] = "{0}_{1}_{2}";    // {MAP_NAME}_{r}_{c}
 constexpr char MAP_NAME[]                 = "Map";            // Map
 constexpr char MAP_BLOCK_NAME[]           = "MapBlock";       // MapBlock
 constexpr char MAP_SIZE_NAME[]            = "MapSize";        // MapSize
